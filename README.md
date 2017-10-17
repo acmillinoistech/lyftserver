@@ -70,9 +70,44 @@ Search for all valid trip records between two date/time points.
 	success: true,
 	length: 750,
 	response: {
-		{
-
-		}
+	    {
+	      "company": "Bauer Taxi Service",
+	      "dropoff_census_tract": "17031081300",
+	      "dropoff_centroid_latitude": "41.898331794",
+	      "dropoff_centroid_location": {
+	        "type": "Point",
+	        "coordinates": [
+	          -87.6207628651,
+	          41.8983317935
+	        ]
+	      },
+	      "dropoff_centroid_longitude": "-87.620762865",
+	      "dropoff_community_area": "8",
+	      "extras": "1",
+	      "fare": "7.85",
+	      "payment_type": "Cash",
+	      "pickup_census_tract": "17031320600",
+	      "pickup_centroid_latitude": "41.870607372",
+	      "pickup_centroid_location": {
+	        "type": "Point",
+	        "coordinates": [
+	          -87.6221729369,
+	          41.8706073724
+	        ]
+	      },
+	      "pickup_centroid_longitude": "-87.622172937",
+	      "pickup_community_area": "32",
+	      "taxi_id": "e3490f01724ad4a617a42371dab38fcbcb4b7f6418d451b7c8392135a040d2f63591def795e0ec2564c589bae2d2169b0d778204659910d80932d3b69eff4eda",
+	      "tips": "0",
+	      "tolls": "0",
+	      "trip_end_timestamp": "2014-09-10T12:15:00",
+	      "trip_id": "8ba13d43087a7d5279b788c7d6e89b765ea5db82",
+	      "trip_miles": "21",
+	      "trip_seconds": "540",
+	      "trip_start_timestamp": "2014-09-10T12:00:00",
+	      "trip_total": "8.85",
+	      "entry_idx": 0
+	    },
 		...
 	}
 }
@@ -221,10 +256,17 @@ Simulate rides won and revenue earned for teams between two date/time points.
 #### Response
 ```
 {
-	success: true,
-	response: {
-		{
-			...
+	"success": true,
+	"data": {
+		"team1": {
+			"trips": {
+				"lyft": 0,
+				"taxi": 31143
+			},
+			"revenue": {
+				"lyft": "0.00",
+				"taxi": "320012.90"
+			}
 		}
 		...
 	}
