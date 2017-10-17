@@ -1,6 +1,10 @@
 # Lyft Hack Night Server
 
-Description coming soon...
+In this challenge, teams compete to help Lyft earn more riders in the city of Chicago, The challenge simulates an alternate reality where there are no Lyft cars (or any other ridesharing services), only taxis... all of which are operated by the infamous Bauer Taxis Service.
+
+Using the resources provided, work with your team to analyze data on rides around the city and form a competitive pricing model to earn business from citizens who normally ride taxis. You can change the price of Lyft rides as well as designate community areas in Chicago as "Power Zones." In power zones, Lyft pays drivers extra to increase the supply of available rides. When you set a power zone, riders may be willing to pay more if a Lyft will arrive faster than a taxi. Be careful thoughl, as power zones become more costly the more rides they convert.
+
+There will be multiple checkpoints in simulation time where we check up on all the teams' progress and see which teams are earning the most revenue. Each team exists in its own separate, simulated universe.
 
 ## Server Instructions
 On first use, install the dependencies.
@@ -11,6 +15,13 @@ Start the test server.
 ```
 node server/test.js
 ```
+
+#### Cloud9 Usage
+If you start the server from a Cloud9 workspace, the API will be available at:
+- https://`workspacename`-`username`.c9users.io
+- For the primary Cloud9 workspace, the API runs [here](https://lyft-vingkan.c9users.io/hello).
+
+You can use [the primary project workspace](https://ide.c9.io/vingkan/lyft) to run the API, but do not do any development work there. To edit samples, clone the repository into another workspace.
 
 ## Client Instructions
 Run any client scripts in a different terminal while the server is up. Ensure requests are made to the correct API URL.
