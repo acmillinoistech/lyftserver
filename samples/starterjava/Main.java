@@ -25,17 +25,15 @@ public class Main {
 		try {
 			
 			SimpleDateFormat sdf = new SimpleDateFormat("M/d h:mm a");
-			JSONObject response = getTrips("9/10/2017 2:00 PM", "9/10/2017 3:00 PM", 20);
+			JSONObject response = getTrips("9/10/2017 2:00 PM", "9/10/2017 3:00 PM", 10);
 			JSONArray results = (JSONArray) response.getJSONArray("response");
 			for (int i = 0; i < results.length(); i++) {
 				JSONObject trip = (JSONObject) results.getJSONObject(i);
 				String tripStart = (String) trip.get("trip_start_timestamp");
 				Date d = getDateFromString(tripStart);
-				System.out.println(d);
 				String time = sdf.format(d);
 				String pickup = (String) trip.get("pickup_community_area");
 				String dropoff = (String) trip.get("dropoff_community_area");
-				System.out.println(tripStart);
 				String out = String.format("Trip at %s from area %s to %s", time, pickup, dropoff);
 				System.out.println(out);
 			}

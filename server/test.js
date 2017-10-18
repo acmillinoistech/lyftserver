@@ -385,6 +385,8 @@ function getTrips(params) {
 		
 		console.log('Start:', moment(ds).format(`M/D/YY h:mm A`));
 		console.log('End:', moment(de).format(`M/D/YY h:mm A`));
+		
+		console.log(`Limit: ${limit}, Offset: ${offset}`);
 			
 		get(TAXI_DATASET_URL, {
 			'$where': `${params.field} between '${getISOString(ds)}' and '${getISOString(de)}'`,
