@@ -22,7 +22,7 @@ function get(url, query) {
 }
 
 function getISOString(ts) {
-	return moment(ts).format(`YYYY-MM-DDThh:mm:ss`);
+	return moment(ts).format(`YYYY-MM-DDTHH:mm:ss`);
 }
 
 function convertTime(timestamp, in_range, out_range) {
