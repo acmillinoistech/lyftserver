@@ -489,6 +489,13 @@ app.get('/trips/', (req, res) => {
 	
 	console.log(`\nGET /trips`);
 	
+	if (req.query.where) {
+		res.send({
+			success: false,
+			error: `Where clauses are not currently permitted.`
+		});
+	}
+	
 	let params = req.query;
 	let teamid = params.team;
 	countTrips(params).then((response) => {
