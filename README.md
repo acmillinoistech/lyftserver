@@ -1,11 +1,17 @@
 # Lyft Hack Night Server
 
+## Table of Contents
+- [Server Instructions](#section-server)
+- [Client Instructions](#section-client)
+- [API Endpoints](#section-api)
+
 In this challenge, teams compete to help Lyft earn more riders in the city of Chicago, The challenge simulates an alternate reality where there are no Lyft cars (or any other ridesharing services), only taxis... all of which are operated by the infamous Bauer Taxi Service.
 
 Using the resources provided, work with your team to analyze data on rides around the city and form a competitive pricing model to earn business from citizens who normally ride taxis. You can change the price of Lyft rides as well as designate community areas in Chicago as "Power Zones." In power zones, Lyft pays drivers extra to increase the supply of available rides. When you set a power zone, riders may be willing to pay more if a Lyft will arrive faster than a taxi. Be careful thoughl, as power zones become more costly the more rides they convert.
 
 There will be multiple checkpoints in simulation time where we check up on all the teams' progress and see which teams are earning the most revenue. Each team exists in its own separate, simulated universe.
 
+<a name="section-server">
 ## Server Instructions
 On first use, install the dependencies.
 ```
@@ -27,6 +33,7 @@ If you start the server from a Cloud9 workspace, the API will be available at:
 
 You can use [the primary project workspace](https://ide.c9.io/vingkan/lyft) to run the API, but do not do any development work there. To edit samples, clone the repository into another workspace.
 
+<a name="section-client">
 ## Client Instructions
 Run any client scripts in a different terminal while the server is up. Ensure requests are made to the correct API URL.
 
@@ -51,6 +58,7 @@ javac -cp ".:lib/*" Main.java
 java -cp ".:lib/*" Main
 ```
 
+<a name="section-api">
 ## API Endpoints
 
 Teams play this challenge with a RESTful API, allowing analysts to work in any programming language. Each team will receive a secret API key to use when making requests and accessing other challenge services. Keep this key secret, otherwise other teams may be able to observe or manipulate your strategy.
@@ -58,18 +66,19 @@ Teams play this challenge with a RESTful API, allowing analysts to work in any p
 **Note:** When using the test server, you can make up any team key you want or simulate different teams playing by using multiple keys.
 
 There are five public endpoints:
-- `/trips`: Search for all valid trip records between two date/time points.
-- `/count`: Count the total number of valid trip records between two date/time points.
-- `/time`: Get the current time in the simulation.
-- `/pricing`: Update your team's pricing model for the current simulation checkpoint.
-- `/zones`: Set community areas in the city as power zones for the current simulation checkpoint.
+- [`/trips`](#get-trips): Search for all valid trip records between two date/time points.
+- [`/count`](#get-count): Count the total number of valid trip records between two date/time points.
+- [`/time`](#get-time): Get the current time in the simulation.
+- [`/pricing`](#post-pricing): Update your team's pricing model for the current simulation checkpoint.
+- [`/zones`](#post-zones): Set community areas in the city as power zones for the current simulation checkpoint.
 
 And two administrative endpoints:
-- `/checkpoint`: Move the simulation to the next checkpoint date.
-- `/simulate`: Simulate rides won and revenue earned for teams between two date/time points.
+- [`/checkpoint`](#post-checkpoint): Move the simulation to the next checkpoint date.
+- [`/simulate`](#get-simulate): Simulate rides won and revenue earned for teams between two date/time points.
 
 See the **Client Instructions** section for sample starter code.
 
+<a name="get-trips">
 ### [GET] Trips
 #### Description
 Search for all valid trip records between two date/time points.
@@ -133,6 +142,7 @@ Search for all valid trip records between two date/time points.
 - You must include your team key in the request parameters
 - You cannot search rides past the current time in the simulation
 
+<a name="get-count">
 ### [GET] Count
 #### Description
 Count the total number of valid trip records between two date/time points.
@@ -153,6 +163,7 @@ Count the total number of valid trip records between two date/time points.
 - You must include your team key in the request parameters
 - You cannot search rides past the current time in the simulation
 
+<a name="get-time">
 ### [GET] Time
 #### Description
 Get the current time in the simulation.
@@ -168,7 +179,7 @@ Get the current time in the simulation.
 	message: "The simulation is not over, the time is 10/1/2017."
 }
 ```
-
+<a name="post-pricing">
 ### [POST] Pricing
 #### Description
 Update your team's pricing model for the current simulation checkpoint.
@@ -203,6 +214,7 @@ Update your team's pricing model for the current simulation checkpoint.
 - This POST request responds with your team's updated pricing model: double-check to make sure it is structured the way you want
 - You can only edit your pricing model for the current checkpoint, not past or future ones
 
+<a name="post-zones">
 ### [POST] Zones
 #### Description
 Set community areas in the city as power zones for the current simulation checkpoint.
@@ -228,23 +240,8 @@ Set community areas in the city as power zones for the current simulation checkp
 #### Warnings
 - You must include your team key in the request parameters
 
-
-### [POST] ??? [PROPOSED]
-#### Description
-Proposing a new endpoint or a replacement endpoint that allows teams to change pricing per zone, per hour, or both.
-#### Endpoint
-`/???`
-#### Parameters
-- ...
-#### Response
-```
-{
-	success: true,
-	...
-}
-```
-
-### [ADMIN] [GET] Checkpoint
+<a name="post-checkpoint">
+### [POST] Checkpoint
 #### Description
 This endpoint is only for challenge administrators. Move the simulation to the next checkpoint date.
 #### Endpoint
@@ -261,7 +258,8 @@ This endpoint is only for challenge administrators. Move the simulation to the n
 }
 ```
 
-### [ADMIN] [GET] Simulate
+<a name="get-simulate">
+### [GET] Simulate
 #### Description
 Simulate rides won and revenue earned for teams between two date/time points.
 #### Endpoint

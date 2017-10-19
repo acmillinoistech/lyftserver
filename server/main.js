@@ -618,7 +618,7 @@ app.get('/simulate/', (req, res) => {
 	
 });
 
-app.get('/checkpoint', (req, res) => {
+app.post('/checkpoint', (req, res) => {
 	let admin = req.query.admin;
 	if (admin !== ADMIN_ORIGIN) {
 		res.send({
