@@ -1,3 +1,5 @@
+'use strict';
+
 let express = require('express');
 let app = express();
 let request = require('request');
@@ -20,7 +22,7 @@ function get(url, query) {
 }
 
 function getISOString(ts) {
-	return moment(ts).format(`YYYY-MM-DDThh:mm:ss`);
+	return moment(ts).format(`YYYY-MM-DDTHH:mm:ss`);
 }
 
 function convertTime(timestamp, in_range, out_range) {
@@ -188,7 +190,8 @@ function getRidePrice(record, model) {
 }
 
 function cleanRecords(list) {
-	return list.filter((record) => {
+	let cleaned = list.filter((record) => {
+		//console.log(record.trip_id);
 		let inc = true;
 		if (record.trip_miles) {
 			if (parseFloat(record.trip_miles) <= 0) {
@@ -207,7 +210,13 @@ function cleanRecords(list) {
 			inc = false;
 		}
 		return inc;
-	});
+	}).sort((a, b) => {
+		let at = new Date(a.trip_start_timestamp).getTime();
+		let bt = new Date(b.trip_start_timestamp).getTime();
+		return at - bt;
+	})
+	console.log(`Original: ${list.length}, Cleaned: ${cleaned.length}`);
+	return cleaned;
 }
 
 function getTripRevenue(record, model, isTaxi) {
@@ -376,10 +385,12 @@ function getTrips(params) {
 		
 		console.log('Start:', moment(ds).format(`M/D/YY h:mm A`));
 		console.log('End:', moment(de).format(`M/D/YY h:mm A`));
+		
+		console.log(`Limit: ${limit}, Offset: ${offset}`);
 			
 		get(TAXI_DATASET_URL, {
 			'$where': `${params.field} between '${getISOString(ds)}' and '${getISOString(de)}'`,
-			'$order': `trip_start_timestamp`,
+			'$order': `trip_id`,
 			'$limit': limit,
 			'$offset': offset
 		}).then((body) => {

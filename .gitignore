@@ -81,7 +81,7 @@ typings/
 .mtj.tmp/
 
 # Package Files #
-*.jar
+# *.jar -- include jars`
 *.war
 *.ear
 *.zip
