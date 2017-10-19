@@ -13,5 +13,9 @@
   "devDependencies": {
     "moment": "^2.19.0",
     "request": "^2.83.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/acmillinoistech/lyftserver"
   }
 }
