@@ -12,6 +12,7 @@ const ADMIN_ORIGIN = process.env.ADMIN_SECRET || 'secret';
 const PUBLIC_TRIP_LIMIT = 1000;
 const PORT = process.argv[2] || 8080;
 const TAXI_DATASET_URL = 'https://data.cityofchicago.org/resource/wrvz-psew.json';
+const PROPS_LIST = 'dropoff_centroid_latitude, dropoff_centroid_longitude, dropoff_community_area, extras, fare, pickup_centroid_latitude, pickup_centroid_longitude, pickup_community_area, taxi_id, tips, tolls, trip_end_timestamp, trip_id, trip_miles, trip_seconds, trip_start_timestamp, trip_total';
 const TIME = {
 	simulation: [
 		new Date('10/1/2017').getTime(),
@@ -362,6 +363,7 @@ function countTrips(params) {
 		}
 		
 		get(TAXI_DATASET_URL, {
+			'$select': PROPS_LIST,
 			'$where': whereQuery,
 			'$select': `count(trip_id)`
 		}).then((body) => {
@@ -412,6 +414,7 @@ function getTrips(params) {
 		}
 			
 		get(TAXI_DATASET_URL, {
+			'$select': PROPS_LIST,
 			'$where': whereQuery,
 			'$order': `trip_id`,
 			'$limit': limit,
