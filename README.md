@@ -5,7 +5,7 @@
 - [Client Instructions](#section-client)
 - [API Endpoints](#section-api)
 
-In this challenge, teams compete to help Lyft earn more riders in the city of Chicago, The challenge simulates an alternate reality where there are no Lyft cars (or any other ridesharing services), only taxis... all of which are operated by the infamous Bauer Taxi Service.
+In this challenge, teams compete to help Lyft earn more riders in the city of Chicago. The challenge simulates an alternate reality where there are no Lyft cars (or any other ridesharing services), only taxis... all of which are operated by the infamous Bauer Taxi Service.
 
 Using the resources provided, work with your team to analyze data on rides around the city and form a competitive pricing model to earn business from citizens who normally ride taxis. You can change the price of Lyft rides as well as designate community areas in Chicago as "Power Zones." In power zones, Lyft pays drivers extra to increase the supply of available rides. When you set a power zone, riders may be willing to pay more if a Lyft will arrive faster than a taxi. Be careful thoughl, as power zones become more costly the more rides they convert.
 
