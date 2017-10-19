@@ -8,6 +8,7 @@ let database = require('./database');
 
 /* Global Variables */
 
+const ADMIN_ORIGIN = process.env.ADMIN_SECRET || 'secret';
 const PUBLIC_TRIP_LIMIT = 1000;
 const PORT = process.argv[2] || 8080;
 const TAXI_DATASET_URL = 'https://data.cityofchicago.org/resource/wrvz-psew.json';
@@ -305,7 +306,7 @@ function chooseToRide(record, model) {
 }
 
 function simulateRecord(old, teamData) {
-	let record = JSON.parse(JSON.stringify(old));
+	let record = old;//let record = JSON.parse(JSON.stringify(old));
 	let cs = new Date(record.trip_start_timestamp).getTime();
 	let model = {};
 	model.pricing = getTeamPricing(teamData.pricing, cs);
@@ -613,42 +614,51 @@ app.get('/count/', (req, res) => {
 	
 });
 
-const ADMIN_ORIGIN = process.env.ADMIN_SECRET || 'secret';
-
 app.get('/simulate/', (req, res) => {
 	
-	let admin = req.query.admin;
-	if (admin !== ADMIN_ORIGIN) {
-		res.send({
-			success: false,
-			error: `You are not allowed to execute admin operations.`
-		});
-	}
-	
-	console.log(`\nGET /simulate`);
-	
-	let params = req.query;
-	params.field = 'trip_start_timestamp';
-	
-	countTrips(params).then((countRes) => {
+	try {
+		
+		let admin = req.query.admin;
+		if (admin !== ADMIN_ORIGIN) {
+			res.send({
+				success: false,
+				error: `You are not allowed to execute admin operations.`
+			});
+		}
+		
+		console.log(`\nGET /simulate`);
+		
+		let params = req.query;
+		params.field = 'trip_start_timestamp';
+		
+		countTrips(params).then((countRes) => {
+				
+			let teamMap = {};
+			params.teams.split(',').forEach((teamid) => {
+				teamMap[teamid] = true;
+			});
+			params.teams = teamMap;
+			params.limit = countRes.count;
 			
-		let teamMap = {};
-		params.teams.split(',').forEach((teamid) => {
-			teamMap[teamid] = true;
-		});
-		params.teams = teamMap;
-		params.limit = countRes.count;
-		
-		console.log(`Simulate over ${params.limit} records.`);
-		console.log(params.teams);
-		
-		getTrips(params).then((response) => {
-			let simulated = simulateTrips(response, teamMap).then((simMap) => {
-				let simData = scoreTrips(simMap);
-				res.send({
-					success: true,
-					data: simData
+			console.log(`Simulate over ${params.limit} records.`);
+			console.log(params.teams);
+			
+			getTrips(params).then((response) => {
+				let simulated = simulateTrips(response, teamMap).then((simMap) => {
+					let simData = scoreTrips(simMap);
+					res.send({
+						success: true,
+						start: new Date(params.start).getTime(),
+						end: new Date(params.end).getTime(),
+						data: simData
+					});
+				}).catch((error) => {
+					res.send({
+						success: false,
+						error: reportToUser(error)
+					});
 				});
+				
 			}).catch((error) => {
 				res.send({
 					success: false,
@@ -662,13 +672,13 @@ app.get('/simulate/', (req, res) => {
 				error: reportToUser(error)
 			});
 		});
-		
-	}).catch((error) => {
+	
+	} catch (error) {
 		res.send({
 			success: false,
 			error: reportToUser(error)
 		});
-	});
+	}
 	
 });
 
