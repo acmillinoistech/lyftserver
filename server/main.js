@@ -4,6 +4,7 @@ let express = require('express');
 let app = express();
 let request = require('request');
 let moment = require('moment');
+let database = require('./database');
 
 function get(url, query) {
 	return new Promise((resolve, reject) => {
@@ -51,73 +52,20 @@ function leftPad(n, d) {
 	return str;
 }
 
-const PRICING = {
-	'sample0': {},
-	'sample1': {
-		a: {
-			base: 3.00,
-			pickup: 1.70,
-			per_mile: 0.90,
-			per_minute: 0.90,
-			in_effect: 0
-		}
-	},
-	'sample2': {
-		a: {
-			base: 3.00,
-			pickup: 1.70,
-			per_mile: 0.90,
-			per_minute: 0.90,
-			in_effect: 0
-		}
-	}
-};
-
-const ZONES = {
-	'sample2': {
-		a: {
-			'32': true,
-			in_effect: 0
-		}
-	}
-};
-
 function getTeamData(teamid) {
-	return new Promise((resolve, reject) => {
-		if (teamid in PRICING) {
-			resolve({
-				team: teamid,
-				pricing: PRICING[teamid],
-				zones: ZONES[teamid] || {}
-			});	
-		} else {
-			resolve({
-				team: teamid,
-				pricing: {},
-				zones: {}
-			});
-			/*reject({
-				message: `Team ID ${teamid} not found.`
-			});*/
-		}
-	});
+	return database.getTeamData(teamid);
 }
 
 function getAllTeamData(teams) {
-	return new Promise((resolve, reject) => {
-		let promises = [];
-		for (let teamid in teams) {
-			let p = getTeamData(teamid);
-			promises.push(p);
-		}
-		Promise.all(promises).then((res) => {
-			let teamMap = {};
-			res.forEach((data) => {
-				teamMap[data.team] = data;
-			});
-			resolve(teamMap);
-		}).catch(reject);
-	});
+	return database.getAllTeamData(teams);
+}
+
+function setTeamPricing(teamid, key, pricing) {
+	return database.setTeamPricing(teamid, key, pricing);
+}
+
+function setTeamZones(teamid, key, zones) {
+	return database.setTeamZones(teamid, key, zones);
 }
 
 function getTeamPricing(pricingMap, timestamp) {
@@ -136,6 +84,74 @@ function getTeamZones(zoneMap, timestamp) {
 	}).sort((a, b) => {
 		return b.in_effect - a.in_effect;
 	})[0] || {};
+}
+
+const tsStart = '{';
+const tsEnd = '}';
+
+function parseTimeQuery(query) {
+	try {
+		let nq = '';
+		let tStr = '';
+		let reading = false;
+		for (let i = 0; i < query.length; i++) {
+			let c = query[i];
+			if (c === tsStart) {
+				reading = true;
+			} else if (c === tsEnd) {
+				let ts = new Date(tStr).getTime();
+				let ds = convertTime(ts, TIME.simulation, TIME.real);
+				let is = getISOString(ds);
+				nq += `'${is}'`;
+				reading = false;
+				tStr = '';
+			} else if (reading) {
+				tStr += c;
+			} else {
+				nq += c;
+			}
+		}
+		return {
+			success: true,
+			query: nq
+		}
+	} catch (error) {
+		return {
+			success: false,
+			error: error
+		}
+	}
+}
+
+function cleanWhereClause(whereClause) {
+	let qStart = whereClause.indexOf(`trip_start_timestamp`) > -1;
+	let qEnd = whereClause.indexOf(`trip_end_timestamp`) > -1;
+	let qTime = (qStart ? 1 : 0) + (qEnd ? 1 : 0);
+	if (qTime > 0) {
+		let hp1 = (whereClause.match(/{/g) || []).length;
+		let hp2 = (whereClause.match(/}/g) || []).length;
+		let hasBraces = (hp1 === hp2) && hp1 > 0;
+		if (hasBraces) {
+			let pq = parseTimeQuery(whereClause);
+			if (pq.success) {
+				return pq;
+			} else {
+				return {
+					success: false,
+					error: pq.error
+				}
+			}	
+		} else {
+			return {
+				success: false,
+				error: `Missing braces in time formatting.`
+			}
+		}
+	}
+	return {
+		success: true,
+		query: whereClause
+	}
 }
 
 const COST_WAIT = 3.00;
@@ -483,73 +499,17 @@ app.use((req, res, next) => {
 	next();
 });
 
-const tsStart = '{';
-const tsEnd = '}';
-
-function parseTimeQuery(query) {
-	try {
-		let nq = '';
-		let tStr = '';
-		let reading = false;
-		for (let i = 0; i < query.length; i++) {
-			let c = query[i];
-			if (c === tsStart) {
-				reading = true;
-			} else if (c === tsEnd) {
-				let ts = new Date(tStr).getTime();
-				let ds = convertTime(ts, TIME.simulation, TIME.real);
-				let is = getISOString(ds);
-				nq += `'${is}'`;
-				reading = false;
-				tStr = '';
-			} else if (reading) {
-				tStr += c;
-			} else {
-				nq += c;
-			}
-		}
-		return {
-			success: true,
-			query: nq
-		}
-	} catch (error) {
-		return {
-			success: false,
-			error: error
-		}
-	}
-}
-
-function cleanWhereClause(whereClause) {
-	let qStart = whereClause.indexOf(`trip_start_timestamp`) > -1;
-	let qEnd = whereClause.indexOf(`trip_end_timestamp`) > -1;
-	let qTime = (qStart ? 1 : 0) + (qEnd ? 1 : 0);
-	if (qTime > 0) {
-		let hp1 = (whereClause.match(/{/g) || []).length;
-		let hp2 = (whereClause.match(/}/g) || []).length;
-		let hasBraces = (hp1 === hp2) && hp1 > 0;
-		if (hasBraces) {
-			let pq = parseTimeQuery(whereClause);
-			if (pq.success) {
-				return pq;
-			} else {
-				return {
-					success: false,
-					error: pq.error
-				}
-			}	
-		} else {
-			return {
-				success: false,
-				error: `Missing braces in time formatting.`
-			}
-		}
-	}
-	return {
-		success: true,
-		query: whereClause
-	}
-}
+app.all('*', (req, res, next) => {
+	let start = process.hrtime();
+	res.on('finish', () => {
+		let hrtime = process.hrtime(start);
+		let elapsed = parseFloat(hrtime[0] + (hrtime[1] / 1000000).toFixed(3), 10);
+		console.log(req.path);
+		console.log(req.originalUrl);
+		console.log(elapsed + 'ms');
+	});
+	next();
+});
 
 const PUBLIC_TRIP_LIMIT = 1000;
 
@@ -742,14 +702,17 @@ app.post('/pricing', (req, res) => {
 				error: `No team specified.`
 			});
 		}
-		if (!(teamid in PRICING)) {
-			PRICING[teamid] = {};
-		}
-		PRICING[teamid][t_key] = pricing;
-		res.send({
-			success: true,
-			team: q.team,
-			pricing: pricing
+		setTeamPricing(teamid, t_key, pricing).then((done) => {
+			res.send({
+				success: true,
+				team: q.team,
+				pricing: pricing
+			});	
+		}).catch((error) => {
+			res.send({
+				success: false,
+				error: reportToUser(error)
+			});
 		});
 	} catch (error) {
 		res.send({
@@ -782,14 +745,17 @@ app.post('/zones', (req, res) => {
 				error: `No team specified.`
 			});
 		}
-		if (!(teamid in ZONES)) {
-			ZONES[teamid] = {};
-		}
-		ZONES[teamid][t_key] = zones;
-		res.send({
-			success: true,
-			team: q.team,
-			zones: zones
+		setTeamZones(teamid, t_key, zones).then((done) => {
+			res.send({
+				success: true,
+				team: q.team,
+				zones: zones
+			});	
+		}).catch((error) => {
+			res.send({
+				success: false,
+				error: reportToUser(error)
+			});
 		});
 	} catch (error) {
 		res.send({
