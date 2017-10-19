@@ -329,7 +329,7 @@ function countTrips(params) {
 		
 		let whereQuery;
 		if (params.where) {
-			console.log(`Custom Where Clause: ${params.where}`);
+			//console.log(`Custom Where Clause: ${params.where}`);
 			whereQuery = params.where;
 		} else {
 			params.field = `trip_start_timestamp`;
@@ -483,6 +483,43 @@ app.use((req, res, next) => {
 	next();
 });
 
+const tsStart = '{';
+const tsEnd = '}';
+
+function parseTimeQuery(query) {
+	try {
+		let nq = '';
+		let tStr = '';
+		let reading = false;
+		for (let i = 0; i < query.length; i++) {
+			let c = query[i];
+			if (c === tsStart) {
+				reading = true;
+			} else if (c === tsEnd) {
+				let ts = new Date(tStr).getTime();
+				let ds = convertTime(ts, TIME.simulation, TIME.real);
+				let is = getISOString(ds);
+				nq += `'${is}'`;
+				reading = false;
+				tStr = '';
+			} else if (reading) {
+				tStr += c;
+			} else {
+				nq += c;
+			}
+		}
+		return {
+			success: true,
+			query: nq
+		}
+	} catch (error) {
+		return {
+			success: false,
+			error: error
+		}
+	}
+}
+
 const PUBLIC_TRIP_LIMIT = 1000;
 
 app.get('/trips/', (req, res) => {
@@ -490,10 +527,33 @@ app.get('/trips/', (req, res) => {
 	console.log(`\nGET /trips`);
 	
 	if (req.query.where) {
-		res.send({
-			success: false,
-			error: `Where clauses are not currently permitted.`
-		});
+		let whereClause = req.query.where;
+		let qStart = whereClause.indexOf(`trip_start_timestamp`) > -1;
+		let qEnd = whereClause.indexOf(`trip_end_timestamp`) > -1;
+		let qTime = (qStart ? 1 : 0) + (qEnd ? 1 : 0);
+		if (qTime > 0) {
+			let hp1 = (whereClause.match(/{/g) || []).length;
+			let hp2 = (whereClause.match(/}/g) || []).length;
+			let hasBraces = (hp1 === hp2) && hp1 > 0;
+			if (hasBraces) {
+				let pq = parseTimeQuery(whereClause);
+				if (pq.success) {
+					req.query.where = pq.query;
+					console.log(`Old: ${whereClause}`);
+					console.log(`New: ${pq.query}`);
+				} else {
+					res.send({
+						success: false,
+						error: pq.error
+					});
+				}	
+			} else {
+				res.send({
+					success: false,
+					error: `Missing braces in time formatting.`
+				});	
+			}
+		}
 	}
 	
 	let params = req.query;
