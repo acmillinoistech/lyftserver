@@ -13,7 +13,7 @@ $ npm i
 ```
 Set a secret key to protect administrative operations. Only share this key with other challenge administrators.
 ```
-export ADMIN_KEY=something_secret
+export ADMIN_SECRET=something_secret
 ```
 Start the test server.
 ```
@@ -31,11 +31,21 @@ You can use [the primary project workspace](https://ide.c9.io/vingkan/lyft) to r
 Run any client scripts in a different terminal while the server is up. Ensure requests are made to the correct API URL.
 
 ### Python Starter
+Set your secret team key.
+```
+export TEAM_SECRET=your_team
+```
+Save and run your script.
 ```
 python main.py
 ```
 
 ### Java Starter
+Set your secret team key.
+```
+export TEAM_SECRET=your_team
+```
+Save, compile, and run your script.
 ```
 javac -cp ".:lib/*" Main.java
 java -cp ".:lib/*" Main

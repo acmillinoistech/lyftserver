@@ -552,7 +552,7 @@ app.get('/count/', (req, res) => {
 	
 });
 
-const ADMIN_ORIGIN = process.env.ADMIN_KEY || 'secret';
+const ADMIN_ORIGIN = process.env.ADMIN_SECRET || 'secret';
 
 app.get('/simulate/', (req, res) => {
 	
