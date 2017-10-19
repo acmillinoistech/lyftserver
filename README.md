@@ -13,7 +13,7 @@ $ npm i
 ```
 Start the test server.
 ```
-node server/test.js
+node server/main.js
 ```
 
 #### Cloud9 Usage
