@@ -52,7 +52,7 @@ There are five public endpoints:
 
 And two administrative endpoints:
 - `/checkpoint`: Move the simulation to the next checkpoint date.
-- `/simulate`: 
+- `/simulate`: Simulate rides won and revenue earned for teams between two date/time points.
 
 See the **Client Instructions** section for sample starter code.
 
