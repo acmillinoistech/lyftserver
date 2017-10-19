@@ -11,7 +11,7 @@ Using the resources provided, work with your team to analyze data on rides aroun
 
 There will be multiple checkpoints in simulation time where we check up on all the teams' progress and see which teams are earning the most revenue. Each team exists in its own separate, simulated universe.
 
-<a name="section-server">
+<a name="section-server"></a>
 ## Server Instructions
 On first use, install the dependencies.
 ```
@@ -33,7 +33,7 @@ If you start the server from a Cloud9 workspace, the API will be available at:
 
 You can use [the primary project workspace](https://ide.c9.io/vingkan/lyft) to run the API, but do not do any development work there. To edit samples, clone the repository into another workspace.
 
-<a name="section-client">
+<a name="section-client"></a>
 ## Client Instructions
 Run any client scripts in a different terminal while the server is up. Ensure requests are made to the correct API URL.
 
@@ -58,7 +58,7 @@ javac -cp ".:lib/*" Main.java
 java -cp ".:lib/*" Main
 ```
 
-<a name="section-api">
+<a name="section-api"></a>
 ## API Endpoints
 
 Teams play this challenge with a RESTful API, allowing analysts to work in any programming language. Each team will receive a secret API key to use when making requests and accessing other challenge services. Keep this key secret, otherwise other teams may be able to observe or manipulate your strategy.
@@ -78,7 +78,7 @@ And two administrative endpoints:
 
 See the **Client Instructions** section for sample starter code.
 
-<a name="get-trips">
+<a name="get-trips"></a>
 ### [GET] Trips
 #### Description
 Search for all valid trip records between two date/time points.
@@ -142,7 +142,7 @@ Search for all valid trip records between two date/time points.
 - You must include your team key in the request parameters
 - You cannot search rides past the current time in the simulation
 
-<a name="get-count">
+<a name="get-count"></a>
 ### [GET] Count
 #### Description
 Count the total number of valid trip records between two date/time points.
@@ -163,7 +163,7 @@ Count the total number of valid trip records between two date/time points.
 - You must include your team key in the request parameters
 - You cannot search rides past the current time in the simulation
 
-<a name="get-time">
+<a name="get-time"></a>
 ### [GET] Time
 #### Description
 Get the current time in the simulation.
@@ -179,7 +179,7 @@ Get the current time in the simulation.
 	message: "The simulation is not over, the time is 10/1/2017."
 }
 ```
-<a name="post-pricing">
+<a name="post-pricing"></a>
 ### [POST] Pricing
 #### Description
 Update your team's pricing model for the current simulation checkpoint.
@@ -214,7 +214,7 @@ Update your team's pricing model for the current simulation checkpoint.
 - This POST request responds with your team's updated pricing model: double-check to make sure it is structured the way you want
 - You can only edit your pricing model for the current checkpoint, not past or future ones
 
-<a name="post-zones">
+<a name="post-zones"></a>
 ### [POST] Zones
 #### Description
 Set community areas in the city as power zones for the current simulation checkpoint.
@@ -240,7 +240,7 @@ Set community areas in the city as power zones for the current simulation checkp
 #### Warnings
 - You must include your team key in the request parameters
 
-<a name="post-checkpoint">
+<a name="post-checkpoint"></a>
 ### [POST] Checkpoint
 #### Description
 This endpoint is only for challenge administrators. Move the simulation to the next checkpoint date.
@@ -258,7 +258,7 @@ This endpoint is only for challenge administrators. Move the simulation to the n
 }
 ```
 
-<a name="get-simulate">
+<a name="get-simulate"></a>
 ### [GET] Simulate
 #### Description
 Simulate rides won and revenue earned for teams between two date/time points.
