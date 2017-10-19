@@ -566,7 +566,17 @@ app.get('/count/', (req, res) => {
 	
 });
 
+const ADMIN_ORIGIN = process.env.ADMIN_KEY || 'secret';
+
 app.get('/simulate/', (req, res) => {
+	
+	let admin = req.query.admin;
+	if (admin !== ADMIN_ORIGIN) {
+		res.send({
+			success: false,
+			error: `You are not allowed to execute admin operations.`
+		});
+	}
 	
 	console.log(`\nGET /simulate`);
 	
@@ -616,6 +626,13 @@ app.get('/simulate/', (req, res) => {
 });
 
 app.get('/checkpoint', (req, res) => {
+	let admin = req.query.admin;
+	if (admin !== ADMIN_ORIGIN) {
+		res.send({
+			success: false,
+			error: `You are not allowed to execute admin operations.`
+		});
+	}
 	let status = setNextCheckPoint();
 	res.send({
 		status: status,
@@ -635,18 +652,8 @@ function formatInputPrice(price) {
 	}
 }
 
-const ADMIN_ORIGIN = `https://acmillinoistech.github.io`;
-const REQUIRE_ADMIN = false;
-
 app.post('/pricing', (req, res) => {
 	try {
-		let origin = req.headers.origin;
-		if (origin !== ADMIN_ORIGIN && REQUIRE_ADMIN) {
-			res.send({
-				success: false,
-				error: `Not allowed to execute admin operations from origin: ${origin}.`
-			});
-		}
 		let q = req.query;
 		let t_key = `ts${TIME.now}`;
 		let pricing = {
@@ -682,13 +689,6 @@ app.post('/pricing', (req, res) => {
 
 app.post('/zones', (req, res) => {
 	try {
-		let origin = req.headers.origin;
-		if (origin !== ADMIN_ORIGIN && REQUIRE_ADMIN) {
-			res.send({
-				success: false,
-				error: `Not allowed to execute admin operations from origin: ${origin}.`
-			});
-		}
 		let q = req.query;
 		let t_key = `ts${TIME.now}`;
 		let zones = {

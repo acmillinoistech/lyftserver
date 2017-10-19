@@ -11,6 +11,10 @@ On first use, install the dependencies.
 ```
 $ npm i
 ```
+Set a secret key to protect administrative operations. Only share this key with other challenge administrators.
+```
+export ADMIN_KEY=something_secret
+```
 Start the test server.
 ```
 node server/main.js
@@ -115,7 +119,7 @@ Search for all valid trip records between two date/time points.
 	}
 }
 ```
-#### Common Errors
+#### Warnings
 - You must include your team key in the request parameters
 - You cannot search rides past the current time in the simulation
 
@@ -135,7 +139,7 @@ Count the total number of valid trip records between two date/time points.
 	count: 750
 }
 ```
-#### Common Errors
+#### Warnings
 - You must include your team key in the request parameters
 - You cannot search rides past the current time in the simulation
 
@@ -182,9 +186,9 @@ Update your team's pricing model for the current simulation checkpoint.
 	}
 }
 ```
-#### Common Errors
+#### Warnings
 - You must include your team key in the request parameters
-- [Warning] Fields left blank in the pricing model will be given values of 0: it is possible to lose money by giving way free rides!
+- Fields left blank in the pricing model will be given values of 0: it is possible to lose money by giving way free rides!
 - Extra decimal places will be rounded when setting price
 - This POST request responds with your team's updated pricing model: double-check to make sure it is structured the way you want
 - You can only edit your pricing model for the current checkpoint, not past or future ones
@@ -211,7 +215,7 @@ Set community areas in the city as power zones for the current simulation checkp
 	}
 }
 ```
-#### Common Errors
+#### Warnings
 - You must include your team key in the request parameters
 
 
@@ -236,7 +240,7 @@ This endpoint is only for challenge administrators. Move the simulation to the n
 #### Endpoint
 `/checkpoint`
 #### Parameters
-- None
+- `admin` [required]: secret admin key
 #### Response
 ```
 {
@@ -253,6 +257,7 @@ Simulate rides won and revenue earned for teams between two date/time points.
 #### Endpoint
 `/simulate`
 #### Parameters
+- `admin` [required]: secret admin key
 - `teams` [required]: comma-separated list of team keys
 - `start` [required]: date/time string to start search at
 - `end` [required]: date/time string to end search at
