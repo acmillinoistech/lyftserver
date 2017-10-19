@@ -235,9 +235,6 @@ function getTripRevenue(record, model, isTaxi) {
 	return rev;
 }
 
-const DIFF_MAPPING = false;
-let diffMap = {};
-
 function chooseToRide(record, model) {
 	let pricing = model.pricing;
 	if (!pricing) {
@@ -249,16 +246,6 @@ function chooseToRide(record, model) {
 	taxi_total += modifier;
 	
 	let chooseRide = ride_total <= taxi_total;
-	if (DIFF_MAPPING) {
-		let diff = ride_total - taxi_total;
-		let zone = record.pickup_community_area;
-		if (!(zone in diffMap)) {
-			diffMap[zone] = [];
-		}
-		diffMap[zone].push(diff);
-		//console.log(`Diff: ${diff}`);
-	}
-	
 	//console.log(`Taxi: ${taxi_total.toFixed(2)} <> Ride : ${ride_total.toFixed(2)} => ${chooseRide ? `Ride` : `Taxi`}`);
 	return chooseRide;
 }
@@ -339,17 +326,22 @@ setNextCheckPoint();
 
 function countTrips(params) {
 	return new Promise((resolve, reject) => {
-
-		params.field = `trip_start_timestamp`;
-
-		let is = new Date(params.start).getTime();
-		let ie = new Date(params.end).getTime();
 		
-		let ds = convertTime(is, TIME.simulation, TIME.real);
-		let de = convertTime(ie, TIME.simulation, TIME.real);
+		let whereQuery;
+		if (params.where) {
+			console.log(`Custom Where Clause: ${params.where}`);
+			whereQuery = params.where;
+		} else {
+			params.field = `trip_start_timestamp`;
+			let is = new Date(params.start).getTime();
+			let ie = new Date(params.end).getTime();
+			let ds = convertTime(is, TIME.simulation, TIME.real);
+			let de = convertTime(ie, TIME.simulation, TIME.real);
+			whereQuery = `${params.field} between '${getISOString(ds)}' and '${getISOString(de)}'`
+		}
 		
 		get(TAXI_DATASET_URL, {
-			'$where': `${params.field} between '${getISOString(ds)}' and '${getISOString(de)}'`,
+			'$where': whereQuery,
 			'$select': `count(trip_id)`
 		}).then((body) => {
 			let response = JSON.parse(body);
@@ -364,32 +356,42 @@ function countTrips(params) {
 function getTrips(params) {
 	return new Promise((resolve, reject) => {
 		
-		console.log(params.start, params.end);
-		
-		params.field = `trip_start_timestamp`;
-		
 		let limit = params.limit || PUBLIC_TRIP_LIMIT;
 		let offset = params.offset || 0;
-		let is = new Date(params.start).getTime();
-		let ie = new Date(params.end).getTime();
-		
-		if (is > TIME.now) {
-			reject(`Requested a start time in the future of this universe: ${params.start}`);
-		}
-		if (ie > TIME.now) {
-			reject(`Requested an end time in the future of this universe: ${params.end}`);
-		}
-		
-		let ds = convertTime(is, TIME.simulation, TIME.real);
-		let de = convertTime(ie, TIME.simulation, TIME.real);
-		
-		console.log('Start:', moment(ds).format(`M/D/YY h:mm A`));
-		console.log('End:', moment(de).format(`M/D/YY h:mm A`));
 		
 		console.log(`Limit: ${limit}, Offset: ${offset}`);
 			
+		let whereQuery;
+		if (params.where) {
+			console.log(`Custom Where Clause: ${params.where}`);
+			whereQuery = params.where;
+		} else {
+			
+			console.log(params.start, params.end);
+			
+			params.field = `trip_start_timestamp`;
+			
+			let is = new Date(params.start).getTime();
+			let ie = new Date(params.end).getTime();
+			
+			if (is > TIME.now) {
+				reject(`Requested a start time in the future of this universe: ${params.start}`);
+			}
+			if (ie > TIME.now) {
+				reject(`Requested an end time in the future of this universe: ${params.end}`);
+			}
+		
+			let ds = convertTime(is, TIME.simulation, TIME.real);
+			let de = convertTime(ie, TIME.simulation, TIME.real);
+			
+			console.log('Start:', moment(ds).format(`M/D/YY h:mm A`));
+			console.log('End:', moment(de).format(`M/D/YY h:mm A`));
+			
+			whereQuery = `${params.field} between '${getISOString(ds)}' and '${getISOString(de)}'`
+		}
+			
 		get(TAXI_DATASET_URL, {
-			'$where': `${params.field} between '${getISOString(ds)}' and '${getISOString(de)}'`,
+			'$where': whereQuery,
 			'$order': `trip_id`,
 			'$limit': limit,
 			'$offset': offset
@@ -487,6 +489,13 @@ app.get('/trips/', (req, res) => {
 	
 	console.log(`\nGET /trips`);
 	
+	if (req.query.where) {
+		res.send({
+			success: false,
+			error: `Where clauses are not currently permitted.`
+		});
+	}
+	
 	let params = req.query;
 	let teamid = params.team;
 	countTrips(params).then((response) => {
@@ -499,22 +508,6 @@ app.get('/trips/', (req, res) => {
 		}
 		
 		getTrips(params).then((response) => {
-			
-			if (DIFF_MAPPING) {
-				console.log(`\nZone Competition over ${response.length} Rides`);
-				let totalWon = 0;
-				for (let zone in diffMap) {
-					let list = diffMap[zone];
-					let sum = list.reduce((total, diff) => {
-						return total + diff;
-					}, 0);
-					let avg = sum / list.length;
-					let wins = list.filter((diff) => diff <= 0).length;
-					totalWon += wins;
-					console.log(`Zone ${leftPad(zone, 2)} | avgdiff = ${avg.toFixed(2)} win = ${wins}/${list.length}`);
-				}
-				console.log(`Total Won = ${totalWon}`);
-			}
 			
 			let teamMap = {};
 				teamMap[teamid] = true;
@@ -566,7 +559,17 @@ app.get('/count/', (req, res) => {
 	
 });
 
+const ADMIN_ORIGIN = process.env.ADMIN_SECRET || 'secret';
+
 app.get('/simulate/', (req, res) => {
+	
+	let admin = req.query.admin;
+	if (admin !== ADMIN_ORIGIN) {
+		res.send({
+			success: false,
+			error: `You are not allowed to execute admin operations.`
+		});
+	}
 	
 	console.log(`\nGET /simulate`);
 	
@@ -615,7 +618,14 @@ app.get('/simulate/', (req, res) => {
 	
 });
 
-app.get('/checkpoint', (req, res) => {
+app.post('/checkpoint', (req, res) => {
+	let admin = req.query.admin;
+	if (admin !== ADMIN_ORIGIN) {
+		res.send({
+			success: false,
+			error: `You are not allowed to execute admin operations.`
+		});
+	}
 	let status = setNextCheckPoint();
 	res.send({
 		status: status,
@@ -635,18 +645,8 @@ function formatInputPrice(price) {
 	}
 }
 
-const ADMIN_ORIGIN = `https://acmillinoistech.github.io`;
-const REQUIRE_ADMIN = false;
-
 app.post('/pricing', (req, res) => {
 	try {
-		let origin = req.headers.origin;
-		if (origin !== ADMIN_ORIGIN && REQUIRE_ADMIN) {
-			res.send({
-				success: false,
-				error: `Not allowed to execute admin operations from origin: ${origin}.`
-			});
-		}
 		let q = req.query;
 		let t_key = `ts${TIME.now}`;
 		let pricing = {
@@ -682,13 +682,6 @@ app.post('/pricing', (req, res) => {
 
 app.post('/zones', (req, res) => {
 	try {
-		let origin = req.headers.origin;
-		if (origin !== ADMIN_ORIGIN && REQUIRE_ADMIN) {
-			res.send({
-				success: false,
-				error: `Not allowed to execute admin operations from origin: ${origin}.`
-			});
-		}
 		let q = req.query;
 		let t_key = `ts${TIME.now}`;
 		let zones = {

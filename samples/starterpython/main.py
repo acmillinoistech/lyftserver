@@ -3,11 +3,12 @@ Python Starter Code
 >> python main.py
 '''
 
+import os
 import requests
 from datetime import datetime
 
 URL = "https://lyft-vingkan.c9users.io"
-TEAM = "your-team"
+TEAM = os.environ["TEAM_SECRET"]
 
 '''
 Helper Methods

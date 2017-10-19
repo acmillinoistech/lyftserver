@@ -14,7 +14,7 @@ import java.text.ParseException;
 public class Main {
 	
 	public static final String BASE_URL = "https://lyft-vingkan.c9users.io";
-	public static final String TEAM = "your-team";
+	public static final String TEAM = System.getenv().get("TEAM_SECRET");
 	
 	public static void main(String[] args) {
 		
