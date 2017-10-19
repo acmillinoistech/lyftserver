@@ -306,8 +306,17 @@ function chooseToRide(record, model) {
 	return chooseRide;
 }
 
+function cloneRecord(old) {
+	let res = {};
+	for (let key in old) {
+		res[key] = old[key];
+	}
+	return res;
+}
+
 function simulateRecord(old, teamData) {
-	let record = old;//let record = JSON.parse(JSON.stringify(old));
+	//let record = JSON.parse(JSON.stringify(old));
+	let record = cloneRecord(old);
 	let cs = new Date(record.trip_start_timestamp).getTime();
 	let model = {};
 	model.pricing = getTeamPricing(teamData.pricing, cs);

@@ -35,7 +35,6 @@ function simulate(params) {
             start: params.start,
             end: params.end
         }).then((res) => {
-            console.log(res);
             if (res.success) {
                 resolve(res);
             } else {
@@ -75,8 +74,9 @@ while (now.getTime() < es) {
 console.log('getting it');
 console.log(promises.length)
 
-/*Promise.all(promises).then((res) => {
+Promise.all(promises).then((res) => {
+    console.log("done");
 }).catch((error) => {
     console.error(error);
-});*/
+});
 
