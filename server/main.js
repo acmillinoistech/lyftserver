@@ -6,6 +6,48 @@ let request = require('request');
 let moment = require('moment');
 let database = require('./database');
 
+/* Global Variables */
+
+const PUBLIC_TRIP_LIMIT = 1000;
+const PORT = process.argv[2] || 8080;
+const TAXI_DATASET_URL = 'https://data.cityofchicago.org/resource/wrvz-psew.json';
+const TIME = {
+	simulation: [
+		new Date('10/1/2017').getTime(),
+		new Date('10/7/2017').getTime()
+	],
+	real: [
+		new Date('10/1/2016').getTime(),
+		new Date('10/7/2016').getTime()
+	],
+	checkpoints: [
+		new Date('10/1/2017').getTime(),
+		new Date('10/8/2017').getTime(),
+		new Date('10/15/2017').getTime(),
+		new Date('10/22/2017').getTime()
+	],
+	now: 0
+};
+
+const COST_WAIT = 3.00;
+const COST_WAIT_SPAN = 2.50;
+
+let cpidx = 0;
+function setNextCheckPoint() {
+	let nextTime = TIME.checkpoints[cpidx];
+	if (nextTime) {
+		TIME.now = nextTime;
+		cpidx++;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+setNextCheckPoint();
+
+/* Server Functions */
+
 function get(url, query) {
 	return new Promise((resolve, reject) => {
 		request({
@@ -86,11 +128,10 @@ function getTeamZones(zoneMap, timestamp) {
 	})[0] || {};
 }
 
-const tsStart = '{';
-const tsEnd = '}';
-
 function parseTimeQuery(query) {
 	try {
+		const tsStart = '{';
+		const tsEnd = '}';
 		let nq = '';
 		let tStr = '';
 		let reading = false;
@@ -153,9 +194,6 @@ function cleanWhereClause(whereClause) {
 		query: whereClause
 	}
 }
-
-const COST_WAIT = 3.00;
-const COST_WAIT_SPAN = 2.50;
 
 function getZoneModifier(record, model) {
 	// Check if record is in power zone;
@@ -305,40 +343,6 @@ function processRecords(list) {
 	});
 	return response;
 }
-
-const PORT = process.argv[2] || 8080;
-const TAXI_DATASET_URL = 'https://data.cityofchicago.org/resource/wrvz-psew.json';
-const TIME = {
-	simulation: [
-		new Date('10/1/2017').getTime(),
-		new Date('10/7/2017').getTime()
-	],
-	real: [
-		new Date('10/1/2016').getTime(),
-		new Date('10/7/2016').getTime()
-	],
-	checkpoints: [
-		new Date('10/1/2017').getTime(),
-		new Date('10/8/2017').getTime(),
-		new Date('10/15/2017').getTime(),
-		new Date('10/22/2017').getTime()
-	],
-	now: 0
-};
-
-let cpidx = 0;
-function setNextCheckPoint() {
-	let nextTime = TIME.checkpoints[cpidx];
-	if (nextTime) {
-		TIME.now = nextTime;
-		cpidx++;
-		return true;
-	} else {
-		return false;
-	}
-}
-
-setNextCheckPoint();
 
 function countTrips(params) {
 	return new Promise((resolve, reject) => {
@@ -493,6 +497,19 @@ function scoreTrips(simMap) {
 	
 }
 
+function formatInputPrice(price) {
+	if (price) {
+		let p = parseFloat(price);
+		let d = p.toFixed(2);
+		let r = parseFloat(d);
+		return r;
+	} else {
+		return 0;
+	}
+}
+
+/* Global Variables */
+
 app.use((req, res, next) => {
 	res.header("Access-Control-Allow-Origin", "*");
 	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -505,13 +522,11 @@ app.all('*', (req, res, next) => {
 		let hrtime = process.hrtime(start);
 		let elapsed = parseFloat(hrtime[0] + (hrtime[1] / 1000000).toFixed(3), 10);
 		console.log(req.path);
-		console.log(req.originalUrl);
-		console.log(elapsed + 'ms');
+		console.log(req.query);
+		console.log(elapsed + 'ms\n');
 	});
 	next();
 });
-
-const PUBLIC_TRIP_LIMIT = 1000;
 
 app.get('/trips/', (req, res) => {
 	
@@ -672,17 +687,6 @@ app.post('/checkpoint', (req, res) => {
 		message: `The simulation ${status ? `is not over` : `is over`}, the time is ${moment(TIME.now).format('M/D/YYYY')}.`
 	});
 });
-
-function formatInputPrice(price) {
-	if (price) {
-		let p = parseFloat(price);
-		let d = p.toFixed(2);
-		let r = parseFloat(d);
-		return r;
-	} else {
-		return 0;
-	}
-}
 
 app.post('/pricing', (req, res) => {
 	try {

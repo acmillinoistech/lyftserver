@@ -1,3 +1,5 @@
+'use strict';
+
 const PRICING = {
 	'sample0': {},
 	'sample1': {
