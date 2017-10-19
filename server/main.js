@@ -520,6 +520,37 @@ function parseTimeQuery(query) {
 	}
 }
 
+function cleanWhereClause(whereClause) {
+	let qStart = whereClause.indexOf(`trip_start_timestamp`) > -1;
+	let qEnd = whereClause.indexOf(`trip_end_timestamp`) > -1;
+	let qTime = (qStart ? 1 : 0) + (qEnd ? 1 : 0);
+	if (qTime > 0) {
+		let hp1 = (whereClause.match(/{/g) || []).length;
+		let hp2 = (whereClause.match(/}/g) || []).length;
+		let hasBraces = (hp1 === hp2) && hp1 > 0;
+		if (hasBraces) {
+			let pq = parseTimeQuery(whereClause);
+			if (pq.success) {
+				return pq;
+			} else {
+				return {
+					success: false,
+					error: pq.error
+				}
+			}	
+		} else {
+			return {
+				success: false,
+				error: `Missing braces in time formatting.`
+			}
+		}
+	}
+	return {
+		success: true,
+		query: whereClause
+	}
+}
+
 const PUBLIC_TRIP_LIMIT = 1000;
 
 app.get('/trips/', (req, res) => {
@@ -527,32 +558,11 @@ app.get('/trips/', (req, res) => {
 	console.log(`\nGET /trips`);
 	
 	if (req.query.where) {
-		let whereClause = req.query.where;
-		let qStart = whereClause.indexOf(`trip_start_timestamp`) > -1;
-		let qEnd = whereClause.indexOf(`trip_end_timestamp`) > -1;
-		let qTime = (qStart ? 1 : 0) + (qEnd ? 1 : 0);
-		if (qTime > 0) {
-			let hp1 = (whereClause.match(/{/g) || []).length;
-			let hp2 = (whereClause.match(/}/g) || []).length;
-			let hasBraces = (hp1 === hp2) && hp1 > 0;
-			if (hasBraces) {
-				let pq = parseTimeQuery(whereClause);
-				if (pq.success) {
-					req.query.where = pq.query;
-					console.log(`Old: ${whereClause}`);
-					console.log(`New: ${pq.query}`);
-				} else {
-					res.send({
-						success: false,
-						error: pq.error
-					});
-				}	
-			} else {
-				res.send({
-					success: false,
-					error: `Missing braces in time formatting.`
-				});	
-			}
+		let cq = cleanWhereClause(req.query.where);
+		if (cq.success) {
+			req.query.where = cq.query;
+		} else {
+			res.send(cq);
 		}
 	}
 	
@@ -602,6 +612,15 @@ app.get('/trips/', (req, res) => {
 });
 
 app.get('/count/', (req, res) => {
+	
+	if (req.query.where) {
+		let cq = cleanWhereClause(req.query.where);
+		if (cq.success) {
+			req.query.where = cq.query;
+		} else {
+			res.send(cq);
+		}
+	}
 	
 	let params = req.query;
 	params.field = req.params.field;
