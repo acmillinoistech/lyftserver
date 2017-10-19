@@ -68,4 +68,5 @@ p = set_pricing({
 print(p)
 
 z = set_zones([5, 6, 7])
+
 print(z)
