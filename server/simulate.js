@@ -2,10 +2,11 @@
 
 let request = require('request');
 let moment = require('moment');
-//let database = require('./database');
+let database = require('./database');
 
 const URL = "https://lyft-vingkan.c9users.io";
-const ADMIN = process.env.ADMIN_SECRET || 'secret';
+const ADMIN = process.env.ADMIN_SECRET || "secret";
+const GAME = process.env.GAME_KEY || "no_game";
 const TEAMS = [
     'team1',
     'sample0'
@@ -35,13 +36,24 @@ function simulate(params) {
             start: params.start,
             end: params.end
         }).then((res) => {
-            if (res.success) {
-                resolve(res);
+            let r = JSON.parse(res);
+            if (r.success) {
+                resolve(r);
             } else {
-                reject(res);
+                reject(r);
             }
         }).catch(reject);
     });
+}
+
+function getSimKey(sim) {
+    return `s${sim.start}e${sim.end}`;
+}
+
+function save(sim) {
+    let key = getSimKey(sim);
+    console.log(`Saved: ${moment(sim.start).format('M/D')} - ${moment(sim.end).format('M/D')}`);
+    // Post to lyft/${GAME}/${key}
 }
 
 let startArg = process.argv[2];
@@ -65,18 +77,12 @@ while (now.getTime() < es) {
     let p = simulate({
         start: moment(now).format('MM/DD/YYYY'),
         end: moment(next).format('MM/DD/YYYY')
-    });
+    }).then((res) => {
+        save(res);
+    }).catch(console.error);
     now = next;
     next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     promises.push(p);
 }
 
-console.log('getting it');
-console.log(promises.length)
-
-Promise.all(promises).then((res) => {
-    console.log("done");
-}).catch((error) => {
-    console.error(error);
-});
-
+console.log(`Simulating in ${promises.length} steps.`);
