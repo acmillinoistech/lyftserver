@@ -94,6 +94,7 @@ Search for all valid trip records between two date/time points.
 You can fine tune your search query with a SQL WHERE clause instead of `start` and `end`.
 - `team` [required]: secret key for your team
 - `where` [required]: SQL WHERE clause
+ 
 When querying across dates and times, wrap the values with curly braces. This applies to the columns `trip_start_timestamp` and `trip_end_timestamp`.
 ```
 {
