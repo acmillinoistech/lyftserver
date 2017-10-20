@@ -60,9 +60,25 @@ function getSimKey(sim) {
 
 function save(sim) {
     let key = getSimKey(sim);
-    db.ref(`lyft/results/${GAME}/${key}`).set(sim).then((done) => {
+    return db.ref(`lyft/results/${GAME}/${key}`).set(sim).then((done) => {
         console.log(`Saved: ${moment(sim.start).format('M/D')} - ${moment(sim.end).format('M/D')}`);
     }).catch(console.error);
+}
+
+function reflect(promise) {
+    return new Promise((resolve, reject) => {
+        promise.then((data) => {
+            resolve({
+                success: true,
+                data: data
+            })
+        }).catch((error) => {
+            resolve({
+                success: false,
+                error: error
+            });
+        })
+    });
 }
 
 let startArg = process.argv[2];
@@ -83,15 +99,28 @@ let next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 console.log(`${moment(ss).format('M/D/YY')} <--> ${moment(es).format('M/D/YY')}`);
 
 while (now.getTime() < es) {
-    let p = simulate({
-        start: moment(now).format('MM/DD/YYYY'),
-        end: moment(next).format('MM/DD/YYYY')
-    }).then((res) => {
-        save(res);
-    }).catch(console.error);
+    let p = reflect(new Promise((resolve, reject) => {
+            simulate({
+            start: moment(now).format('MM/DD/YYYY'),
+            end: moment(next).format('MM/DD/YYYY')
+        }).then((res) => {
+            save(res).then(resolve).catch(reject);
+        }).catch(reject);
+    }));
     now = next;
     next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     promises.push(p);
 }
 
 console.log(`Simulating in ${promises.length} steps.`);
+
+Promise.all(promises).then((data) => {
+    let wins = data.filter((p) => p.success).length;
+    console.log(`Finished ${wins}/${data.length} steps without errors.`);
+    data.filter((p) => !p.success).forEach((p) => {
+        console.log(p.error);
+    });
+}).catch((error) => {
+    console.log(`Error prevented all steps from saving. Some may have completed:`);
+    console.log(error);
+});
