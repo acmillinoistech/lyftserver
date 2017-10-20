@@ -17,6 +17,22 @@ On first use, install the dependencies.
 ```
 $ npm i
 ```
+If you are using Firebase as a backend for the game, add a `config.js` file in the `/server` folder with the relevant keys like so:
+```
+// In: /server/config.js
+module.exports = {
+    apiKey: "secretKey",
+    authDomain: "projectId.firebaseapp.com",
+    databaseURL: "https://projectId.firebaseio.com",
+    projectId: "projectId",
+    storageBucket: "projectId.appspot.com",
+    messagingSenderId: "secretNumber"
+}
+```
+Set a game key. This key may be shared publicly. Participants will use it to see the results.
+```
+export GAME_KEY=lyft_game
+```
 Set a secret key to protect administrative operations. Only share this key with other challenge administrators.
 ```
 export ADMIN_SECRET=something_secret

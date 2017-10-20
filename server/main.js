@@ -8,6 +8,7 @@ let database = require('./database');
 
 /* Global Variables */
 
+const GAME = process.env.GAME_KEY || "no_game";
 const ADMIN_ORIGIN = process.env.ADMIN_SECRET || 'secret';
 const PUBLIC_TRIP_LIMIT = 1000;
 const PORT = process.argv[2] || 8080;
@@ -97,19 +98,19 @@ function leftPad(n, d) {
 }
 
 function getTeamData(teamid) {
-	return database.getTeamData(teamid);
+	return database.getTeamData(GAME, teamid);
 }
 
 function getAllTeamData(teams) {
-	return database.getAllTeamData(teams);
+	return database.getAllTeamData(GAME, teams);
 }
 
 function setTeamPricing(teamid, key, pricing) {
-	return database.setTeamPricing(teamid, key, pricing);
+	return database.setTeamPricing(GAME, teamid, key, pricing);
 }
 
 function setTeamZones(teamid, key, zones) {
-	return database.setTeamZones(teamid, key, zones);
+	return database.setTeamZones(GAME, teamid, key, zones);
 }
 
 function getTeamPricing(pricingMap, timestamp) {
