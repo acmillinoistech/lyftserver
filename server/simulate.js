@@ -1,8 +1,16 @@
+/*
+ * INSTRUCTIONS
+ * To simulate and save results to Firebase:
+ * $ node server/simulate.js 10/1/2017 10/4/2017
+ * Wait for all of the steps to be saved, then exit.
+ */
+
 'use strict';
 
 let request = require('request');
 let moment = require('moment');
 let database = require('./database');
+let db = database.getDB();
 
 const URL = "https://lyft-vingkan.c9users.io";
 const ADMIN = process.env.ADMIN_SECRET || "secret";
@@ -52,8 +60,9 @@ function getSimKey(sim) {
 
 function save(sim) {
     let key = getSimKey(sim);
-    console.log(`Saved: ${moment(sim.start).format('M/D')} - ${moment(sim.end).format('M/D')}`);
-    // Post to lyft/${GAME}/${key}
+    db.ref(`lyft/results/${GAME}/${key}`).set(sim).then((done) => {
+        console.log(`Saved: ${moment(sim.start).format('M/D')} - ${moment(sim.end).format('M/D')}`);
+    }).catch(console.error);
 }
 
 let startArg = process.argv[2];

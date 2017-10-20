@@ -1,5 +1,10 @@
 'use strict';
 
+let firebase = require('firebase');
+let config = require('./config');
+let FirebaseApp = firebase.initializeApp(config);
+let db = FirebaseApp.database();
+
 const PRICING = {
 	'sample0': {},
 	'sample1': {
@@ -32,6 +37,10 @@ const ZONES = {
 };
 
 let database = {
+	
+	getDB: () => {
+		return db;
+	},
     
     getTeamData: (teamid) => {
     	return new Promise((resolve, reject) => {
