@@ -35,7 +35,7 @@ const TIME = {
 const COST_WAIT = 3.00;
 const COST_WAIT_SPAN = 2.50;
 
-let cpidx = 0;
+let cpidx = 1;
 function setNextCheckPoint() {
 	let nextTime = TIME.checkpoints[cpidx];
 	if (nextTime) {
@@ -51,7 +51,7 @@ function setNextCheckPoint() {
 	}
 }
 
-setNextCheckPoint();
+TIME.now = TIME.checkpoints[0];
 
 database.onUpdateTime(GAME, (timeData) => {
 	cpidx = timeData.idx;
