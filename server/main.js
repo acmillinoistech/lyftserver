@@ -41,6 +41,10 @@ function setNextCheckPoint() {
 	if (nextTime) {
 		TIME.now = nextTime;
 		cpidx++;
+		updateTime({
+			time: TIME.now,
+			idx: cpidx
+		});
 		return true;
 	} else {
 		return false;
@@ -48,6 +52,11 @@ function setNextCheckPoint() {
 }
 
 setNextCheckPoint();
+
+database.onUpdateTime(GAME, (timeData) => {
+	cpidx = timeData.idx;
+	TIME.now = timeData.time;
+});
 
 /* Server Functions */
 
@@ -95,6 +104,10 @@ function leftPad(n, d) {
 		str = `0` + str;
 	}
 	return str;
+}
+
+function updateTime(time) {
+	return database.updateTime(GAME, time);
 }
 
 function getTeamData(teamid) {
@@ -790,6 +803,14 @@ app.post('/zones', (req, res) => {
 			error: reportToUser(error)
 		});
 	}
+});
+
+app.get('/time', (req, res) => {
+	res.send({
+		sucess: true,
+		time: TIME.now,
+		message: `The simulation is not over, the time is ${moment(TIME.now).format('M/D/YYYY')}.`
+	});
 });
 
 app.get('/hello', (req, res) => {

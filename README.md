@@ -201,9 +201,9 @@ Get the current time in the simulation.
 #### Response
 ```
 {
-	success: true,
-	time: "2017-10-01",
-	message: "The simulation is not over, the time is 10/1/2017."
+    "sucess": true,
+    "time": 1507420800000,
+    "message": "The simulation is not over, the time is 10/8/2017."
 }
 ```
 <a name="post-pricing"></a>
@@ -278,10 +278,9 @@ This endpoint is only for challenge administrators. Move the simulation to the n
 #### Response
 ```
 {
-	success: true,
-	status: true,
-	time: '2017-10-07',
-	message: "The simulation is not over, the time is 10/7/2017."
+    "status": true,
+    "time": 1507420800000,
+    "message": "The simulation is not over, the time is 10/8/2017."
 }
 ```
 

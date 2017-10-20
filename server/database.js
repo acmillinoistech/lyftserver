@@ -65,6 +65,19 @@ let database = {
         		resolve(zones);
         	}).catch(reject);
         });
+    },
+    
+    updateTime: (gameid, data) => {
+        db.ref(`lyft/time/${gameid}`).set(data);
+    },
+    
+    onUpdateTime: (gameid, callback) => {
+        db.ref(`lyft/time/${gameid}`).on('value', (snap) => {
+            let val = snap.val();
+            if (val) {
+                callback(val);
+            }
+        });
     }
     
 }
