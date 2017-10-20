@@ -1,64 +1,42 @@
 'use strict';
 
-const PRICING = {
-	'sample0': {},
-	'sample1': {
-		a: {
-			base: 3.00,
-			pickup: 1.70,
-			per_mile: 0.90,
-			per_minute: 0.90,
-			in_effect: 0
-		}
-	},
-	'sample2': {
-		a: {
-			base: 3.00,
-			pickup: 1.70,
-			per_mile: 0.90,
-			per_minute: 0.90,
-			in_effect: 0
-		}
-	}
-};
-
-const ZONES = {
-	'sample2': {
-		a: {
-			'32': true,
-			in_effect: 0
-		}
-	}
-};
+let firebase = require('firebase');
+let config = require('./config');
+let FirebaseApp = firebase.initializeApp(config);
+let db = FirebaseApp.database();
 
 let database = {
+	
+	getDB: () => {
+		return db;
+	},
     
-    getTeamData: (teamid) => {
+    getTeamData: (gameid, teamid) => {
     	return new Promise((resolve, reject) => {
-    		if (teamid in PRICING) {
-    			resolve({
-    				team: teamid,
-    				pricing: PRICING[teamid],
-    				zones: ZONES[teamid] || {}
-    			});	
-    		} else {
-    			resolve({
-    				team: teamid,
-    				pricing: {},
-    				zones: {}
-    			});
-    			/*reject({
-    				message: `Team ID ${teamid} not found.`
-    			});*/
-    		}
+    		db.ref(`lyft/teams/${gameid}/${teamid}`).once('value', (snap) => {
+    			let val = snap.val() || {};
+    			if (val) {
+    				resolve({
+	    				team: teamid,
+	    				pricing: val.pricing || {},
+	    				zones: val.zones || {}
+	    			});
+    			} else {
+    				resolve({
+	    				team: teamid,
+	    				pricing: {},
+	    				zones: {}
+	    			});
+    			}
+    		});
     	});
     },
     
-    getAllTeamData: (teams) => {
+    getAllTeamData: (gameid, teams) => {
         return new Promise((resolve, reject) => {
     		let promises = [];
     		for (let teamid in teams) {
-    			let p = database.getTeamData(teamid);
+    			let p = database.getTeamData(gameid, teamid);
     			promises.push(p);
     		}
     		Promise.all(promises).then((res) => {
@@ -71,23 +49,34 @@ let database = {
     	});
     },
     
-    setTeamPricing: (teamid, key, pricing) => {
+    setTeamPricing: (gameid, teamid, key, pricing) => {
         return new Promise((resolve, reject) => {
-            if (!(teamid in PRICING)) {
-                PRICING[teamid] = {};
-            }
-            PRICING[teamid][key] = pricing;
-            resolve(pricing);
+        	let ref = db.ref(`lyft/teams/${gameid}/${teamid}/pricing/${key}`)
+        	ref.set(pricing).then((done) => {
+        		resolve(pricing);
+        	}).catch(reject);
         });
     },
     
-    setTeamZones: (teamid, key, zones) => {
+    setTeamZones: (gameid, teamid, key, zones) => {
         return new Promise((resolve, reject) => {
-            if (!(teamid in ZONES)) {
-                ZONES[teamid] = {};
+        	let ref = db.ref(`lyft/teams/${gameid}/${teamid}/zones/${key}`)
+        	ref.set(zones).then((done) => {
+        		resolve(zones);
+        	}).catch(reject);
+        });
+    },
+    
+    updateTime: (gameid, data) => {
+        db.ref(`lyft/time/${gameid}`).set(data);
+    },
+    
+    onUpdateTime: (gameid, callback) => {
+        db.ref(`lyft/time/${gameid}`).on('value', (snap) => {
+            let val = snap.val();
+            if (val) {
+                callback(val);
             }
-            ZONES[teamid][key] = zones;
-            resolve(zones);
         });
     }
     

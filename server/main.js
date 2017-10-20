@@ -8,10 +8,12 @@ let database = require('./database');
 
 /* Global Variables */
 
+const GAME = process.env.GAME_KEY || "no_game";
 const ADMIN_ORIGIN = process.env.ADMIN_SECRET || 'secret';
 const PUBLIC_TRIP_LIMIT = 1000;
 const PORT = process.argv[2] || 8080;
 const TAXI_DATASET_URL = 'https://data.cityofchicago.org/resource/wrvz-psew.json';
+const PROPS_LIST = 'dropoff_centroid_latitude, dropoff_centroid_longitude, dropoff_community_area, extras, fare, pickup_centroid_latitude, pickup_centroid_longitude, pickup_community_area, taxi_id, tips, tolls, trip_end_timestamp, trip_id, trip_miles, trip_seconds, trip_start_timestamp, trip_total';
 const TIME = {
 	simulation: [
 		new Date('10/1/2017').getTime(),
@@ -39,6 +41,10 @@ function setNextCheckPoint() {
 	if (nextTime) {
 		TIME.now = nextTime;
 		cpidx++;
+		updateTime({
+			time: TIME.now,
+			idx: cpidx
+		});
 		return true;
 	} else {
 		return false;
@@ -46,6 +52,11 @@ function setNextCheckPoint() {
 }
 
 setNextCheckPoint();
+
+database.onUpdateTime(GAME, (timeData) => {
+	cpidx = timeData.idx;
+	TIME.now = timeData.time;
+});
 
 /* Server Functions */
 
@@ -95,20 +106,24 @@ function leftPad(n, d) {
 	return str;
 }
 
+function updateTime(time) {
+	return database.updateTime(GAME, time);
+}
+
 function getTeamData(teamid) {
-	return database.getTeamData(teamid);
+	return database.getTeamData(GAME, teamid);
 }
 
 function getAllTeamData(teams) {
-	return database.getAllTeamData(teams);
+	return database.getAllTeamData(GAME, teams);
 }
 
 function setTeamPricing(teamid, key, pricing) {
-	return database.setTeamPricing(teamid, key, pricing);
+	return database.setTeamPricing(GAME, teamid, key, pricing);
 }
 
 function setTeamZones(teamid, key, zones) {
-	return database.setTeamZones(teamid, key, zones);
+	return database.setTeamZones(GAME, teamid, key, zones);
 }
 
 function getTeamPricing(pricingMap, timestamp) {
@@ -305,8 +320,17 @@ function chooseToRide(record, model) {
 	return chooseRide;
 }
 
+function cloneRecord(old) {
+	let res = {};
+	for (let key in old) {
+		res[key] = old[key];
+	}
+	return res;
+}
+
 function simulateRecord(old, teamData) {
-	let record = old;//let record = JSON.parse(JSON.stringify(old));
+	//let record = JSON.parse(JSON.stringify(old));
+	let record = cloneRecord(old);
 	let cs = new Date(record.trip_start_timestamp).getTime();
 	let model = {};
 	model.pricing = getTeamPricing(teamData.pricing, cs);
@@ -362,6 +386,7 @@ function countTrips(params) {
 		}
 		
 		get(TAXI_DATASET_URL, {
+			'$select': PROPS_LIST,
 			'$where': whereQuery,
 			'$select': `count(trip_id)`
 		}).then((body) => {
@@ -412,6 +437,7 @@ function getTrips(params) {
 		}
 			
 		get(TAXI_DATASET_URL, {
+			'$select': PROPS_LIST,
 			'$where': whereQuery,
 			'$order': `trip_id`,
 			'$limit': limit,
@@ -777,6 +803,14 @@ app.post('/zones', (req, res) => {
 			error: reportToUser(error)
 		});
 	}
+});
+
+app.get('/time', (req, res) => {
+	res.send({
+		sucess: true,
+		time: TIME.now,
+		message: `The simulation is not over, the time is ${moment(TIME.now).format('M/D/YYYY')}.`
+	});
 });
 
 app.get('/hello', (req, res) => {

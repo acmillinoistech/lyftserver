@@ -13,9 +13,27 @@ There will be multiple checkpoints in simulation time where we check up on all t
 
 <a name="section-server"></a>
 ## Server Instructions
+#### Installation
 On first use, install the dependencies.
 ```
 $ npm i
+```
+If you are using Firebase as a backend for the game, add a `config.js` file in the `/server` folder with the relevant keys like so:
+```
+// In: /server/config.js
+module.exports = {
+    apiKey: "secretKey",
+    authDomain: "projectId.firebaseapp.com",
+    databaseURL: "https://projectId.firebaseio.com",
+    projectId: "projectId",
+    storageBucket: "projectId.appspot.com",
+    messagingSenderId: "secretNumber"
+}
+```
+#### Game Setup
+Set a game key. This key may be shared publicly. Participants will use it to see the results.
+```
+export GAME_KEY=lyft_game
 ```
 Set a secret key to protect administrative operations. Only share this key with other challenge administrators.
 ```
@@ -25,7 +43,15 @@ Start the test server.
 ```
 node server/main.js
 ```
-
+#### Game Management
+To move the game to the next defined checkpoint, make a POST request to the admin `/checkpoint` endpoint with the secret admin key.
+```
+POST https://workspacename-username.c9users.io/checkpoint/?admin=ADMIN_SECRET
+```
+Then, you can simulate the trips from the last checkpoint using the admin `/simulate` endpoint. There is a helper script to save these results. Run the script with the date range to simulate over and it will pull and store the simulated data.
+```
+node server/simulate.js 10/1/2017 10/8/2017
+```
 #### Cloud9 Usage
 If you start the server from a Cloud9 workspace, the API will be available at:
 - https://`workspacename`-`username`.c9users.io
@@ -185,9 +211,9 @@ Get the current time in the simulation.
 #### Response
 ```
 {
-	success: true,
-	time: "2017-10-01",
-	message: "The simulation is not over, the time is 10/1/2017."
+    "sucess": true,
+    "time": 1507420800000,
+    "message": "The simulation is not over, the time is 10/8/2017."
 }
 ```
 <a name="post-pricing"></a>
@@ -262,10 +288,9 @@ This endpoint is only for challenge administrators. Move the simulation to the n
 #### Response
 ```
 {
-	success: true,
-	status: true,
-	time: '2017-10-07',
-	message: "The simulation is not over, the time is 10/7/2017."
+    "status": true,
+    "time": 1507420800000,
+    "message": "The simulation is not over, the time is 10/8/2017."
 }
 ```
 
