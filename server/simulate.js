@@ -14,11 +14,18 @@ let db = database.getDB();
 
 const URL = "https://lyft-vingkan.c9users.io";
 const ADMIN = process.env.ADMIN_SECRET || "secret";
-const GAME = process.env.GAME_KEY || "no_game";
+const GAME = process.env.GAME_KEY || false;
 const TEAMS = [
-    'team1',
-    'sample0'
+    // Add teams here
 ];
+
+if (!GAME) {
+    throw new Error('No GAME_KEY set.');
+}
+
+if (TEAMS.length === 0) {
+    throw new Error('No teams to simulate.');
+}
 
 function get(url, query) {
 	return new Promise((resolve, reject) => {
