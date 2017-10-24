@@ -270,6 +270,13 @@ function cleanRecords(list) {
 		} else {
 			inc = false;
 		}
+		if (record.trip_seconds) {
+			if (parseInt(record.trip_seconds) <= 0) {
+				inc = false;
+			}	
+		} else {
+			inc = false;
+		}
 		if (!record.dropoff_centroid_latitude) {
 			inc = false;
 		}
@@ -815,6 +822,10 @@ app.get('/time', (req, res) => {
 
 app.get('/hello', (req, res) => {
 	res.send('Hello World!');
+});
+
+app.get('/loaderio-7ec763e7f3af65111a4c49270f63052a', (req, res) => {
+	res.send('loaderio-7ec763e7f3af65111a4c49270f63052a');
 });
 
 app.listen(PORT, () => {
