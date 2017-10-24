@@ -15,7 +15,7 @@ let db = database.getDB();
 const URL = "https://lyft-vingkan.c9users.io";
 const ADMIN = process.env.ADMIN_SECRET || "secret";
 const GAME = process.env.GAME_KEY || false;
-const TEAMS = ``.split('\n');
+const TEAMS = `onesie`.split('\n');
 
 console.log(TEAMS);
 
@@ -68,7 +68,7 @@ function getSimKey(sim) {
 function save(sim) {
     let key = getSimKey(sim);
     return db.ref(`lyft/results/${GAME}/${key}`).set(sim).then((done) => {
-        console.log(`Saved: ${moment(sim.start).format('M/D')} - ${moment(sim.end).format('M/D')}`);
+        console.log(`Saved: ${moment(sim.start).format('M/D')} <-> ${moment(sim.end).format('M/D')}`);
     }).catch(console.error);
 }
 
@@ -95,39 +95,56 @@ if (!startArg || !endArg) {
     throw new Error('Must provide start and end date as arguments.');
 }
 
-let promises = [];
-
-let ss = new Date(startArg).getTime();
-let es = new Date(endArg).getTime();
-
-let now = new Date(startArg);
-let next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-
-console.log(`${moment(ss).format('M/D/YY')} <--> ${moment(es).format('M/D/YY')}`);
-
-while (now.getTime() < es) {
-    let p = reflect(new Promise((resolve, reject) => {
-            simulate({
-            start: moment(now).format('MM/DD/YYYY'),
-            end: moment(next).format('MM/DD/YYYY')
-        }).then((res) => {
-            save(res).then(resolve).catch(reject);
-        }).catch(reject);
-    }));
-    now = next;
-    next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    promises.push(p);
-}
-
-console.log(`Simulating in ${promises.length} steps.`);
-
-Promise.all(promises).then((data) => {
-    let wins = data.filter((p) => p.success).length;
-    console.log(`Finished ${wins}/${data.length} steps without errors.`);
-    data.filter((p) => !p.success).forEach((p) => {
-        console.log(p.error);
-    });
-}).catch((error) => {
-    console.log(`Error prevented all steps from saving. Some may have completed:`);
-    console.log(error);
+database.init().then(() => {
+    main(startArg, endArg);
 });
+
+function main(startArg, endArg) {
+
+    let promises = [];
+    
+    let ss = new Date(startArg).getTime();
+    let es = new Date(endArg).getTime();
+    
+    let now = new Date(startArg);
+    let next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    
+    console.log(`${moment(ss).format('M/D/YY')} <--> ${moment(es).format('M/D/YY')}`);
+    
+    while (now.getTime() < es) {
+        let startStr = moment(now).format('MM/DD/YYYY');
+        let endStr = moment(next).format('MM/DD/YYYY');
+        let p = reflect(new Promise((resolve, reject) => {
+            simulate({
+                start: startStr,
+                end: endStr
+            }).then((res) => {
+                save(res).then(resolve).catch(reject);
+            }).catch(reject);
+        }));
+        p.range = `${startStr} <-> ${endStr}`;
+        now = next;
+        next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        promises.push(p);
+    }
+    
+    console.log(`Simulating in ${promises.length} steps.`);
+    
+    Promise.all(promises).then((data) => {
+        let wins = data.filter((p) => p.success).length;
+        console.log(`Finished ${wins}/${data.length} steps without errors.`);
+        let failed = data.filter((p) => !p.success);
+        failed.forEach((p) => {
+            console.log(p.error);
+        });
+        failed.forEach((p) => {
+            console.log(`Rerun: ${p.range}`);
+        });
+        process.exit(0);
+    }).catch((error) => {
+        console.log(`Error prevented all steps from saving. Some may have completed:`);
+        console.log(error);
+        process.exit(0);
+    });
+
+}
