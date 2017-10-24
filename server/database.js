@@ -6,6 +6,14 @@ let FirebaseApp = firebase.initializeApp(config);
 let db = FirebaseApp.database();
 
 let database = {
+    
+    init: () => {
+        let p = firebase.auth().signInAnonymously();
+        p.catch((error) => {
+            console.log(`Error [${error.code}] when signing into database: ${error.message}`);
+        });
+        return p;
+    },
 	
 	getDB: () => {
 		return db;

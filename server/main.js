@@ -51,11 +51,21 @@ function setNextCheckPoint() {
 	}
 }
 
-TIME.now = TIME.checkpoints[0];
 
-database.onUpdateTime(GAME, (timeData) => {
-	cpidx = timeData.idx;
-	TIME.now = timeData.time;
+database.init().then((done) => {
+	
+	console.log(`Established connection to database.`);
+
+	TIME.now = TIME.checkpoints[0];
+	
+	database.onUpdateTime(GAME, (timeData) => {
+		cpidx = timeData.idx;
+		TIME.now = timeData.time;
+		console.log(`Synced with simulation time: ${moment(TIME.now).format('M/D/YYYY h:mm A')}`);
+	});
+	
+	initAPI();
+	
 });
 
 /* Server Functions */
@@ -542,148 +552,62 @@ function formatInputPrice(price) {
 	}
 }
 
-/* Global Variables */
+/* API Endpoints */
 
-app.use((req, res, next) => {
-	res.header("Access-Control-Allow-Origin", "*");
-	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-	next();
-});
+function initAPI() {
 
-app.all('*', (req, res, next) => {
-	let start = process.hrtime();
-	res.on('finish', () => {
-		let hrtime = process.hrtime(start);
-		let elapsed = parseFloat(hrtime[0] + (hrtime[1] / 1000000).toFixed(3), 10);
-		console.log(req.path);
-		console.log(req.query);
-		console.log(elapsed + 'ms\n');
-	});
-	next();
-});
-
-app.get('/trips/', (req, res) => {
-	
-	console.log(`\nGET /trips`);
-	
-	if (req.query.where) {
-		let cq = cleanWhereClause(req.query.where);
-		if (cq.success) {
-			req.query.where = cq.query;
-		} else {
-			res.send(cq);
-		}
-	}
-	
-	let params = req.query;
-	let teamid = params.team;
-	countTrips(params).then((response) => {
-		
-		let total = response.count;
-		console.log(`Counted ${total} rides.`);
-		
-		if (parseInt(params.limit) > PUBLIC_TRIP_LIMIT) {
-			params.limit = PUBLIC_TRIP_LIMIT;
-		}
-		
-		getTrips(params).then((response) => {
-			
-			let teamMap = {};
-				teamMap[teamid] = true;
-			let simulated = simulateTrips(response, teamMap).then((simMap) => {
-				let simulated = simMap[teamid];
-				res.send({
-					success: true,
-					length: response.length,
-					response: simulated
-				});
-			}).catch((error) => {
-				res.send({
-					success: false,
-					error: reportToUser(error)
-				});
-			});
-			
-		}).catch((error) => {
-			res.send({
-				success: false,
-				error: reportToUser(error)
-			});
-		});
-		
-	}).catch((error) => {
-		res.send({
-			success: false,
-			error: reportToUser(error)
-		});
+	app.use((req, res, next) => {
+		res.header("Access-Control-Allow-Origin", "*");
+		res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+		next();
 	});
 	
-});
-
-app.get('/count/', (req, res) => {
-	
-	if (req.query.where) {
-		let cq = cleanWhereClause(req.query.where);
-		if (cq.success) {
-			req.query.where = cq.query;
-		} else {
-			res.send(cq);
-		}
-	}
-	
-	let params = req.query;
-	params.field = req.params.field;
-	countTrips(params).then((response) => {
-		res.send({
-			success: true,
-			count: response.count
+	app.all('*', (req, res, next) => {
+		let start = process.hrtime();
+		res.on('finish', () => {
+			let hrtime = process.hrtime(start);
+			let elapsed = parseFloat(hrtime[0] + (hrtime[1] / 1000000).toFixed(3), 10);
+			console.log(req.path);
+			console.log(req.query);
+			console.log(elapsed + 'ms\n');
 		});
-	}).catch((error) => {
-		res.send({
-			success: false,
-			error: reportToUser(error)
-		});
+		next();
 	});
 	
-});
-
-app.get('/simulate/', (req, res) => {
-	
-	try {
+	app.get('/trips/', (req, res) => {
 		
-		let admin = req.query.admin;
-		if (admin !== ADMIN_ORIGIN) {
-			res.send({
-				success: false,
-				error: `You are not allowed to execute admin operations.`
-			});
+		console.log(`\nGET /trips`);
+		
+		if (req.query.where) {
+			let cq = cleanWhereClause(req.query.where);
+			if (cq.success) {
+				req.query.where = cq.query;
+			} else {
+				res.send(cq);
+			}
 		}
-		
-		console.log(`\nGET /simulate`);
 		
 		let params = req.query;
-		params.field = 'trip_start_timestamp';
-		
-		countTrips(params).then((countRes) => {
-				
-			let teamMap = {};
-			params.teams.split(',').forEach((teamid) => {
-				teamMap[teamid] = true;
-			});
-			params.teams = teamMap;
-			params.limit = countRes.count;
+		let teamid = params.team;
+		countTrips(params).then((response) => {
 			
-			console.log(`Simulate over ${params.limit} records.`);
-			console.log(params.teams);
+			let total = response.count;
+			console.log(`Counted ${total} rides.`);
+			
+			if (parseInt(params.limit) > PUBLIC_TRIP_LIMIT) {
+				params.limit = PUBLIC_TRIP_LIMIT;
+			}
 			
 			getTrips(params).then((response) => {
+				
+				let teamMap = {};
+					teamMap[teamid] = true;
 				let simulated = simulateTrips(response, teamMap).then((simMap) => {
-					let simData = scoreTrips(simMap);
+					let simulated = simMap[teamid];
 					res.send({
 						success: true,
-						start: new Date(params.start).getTime(),
-						end: new Date(params.end).getTime(),
-						data: simData
+						length: response.length,
+						response: simulated
 					});
 				}).catch((error) => {
 					res.send({
@@ -705,131 +629,221 @@ app.get('/simulate/', (req, res) => {
 				error: reportToUser(error)
 			});
 		});
-	
-	} catch (error) {
-		res.send({
-			success: false,
-			error: reportToUser(error)
-		});
-	}
-	
-});
-
-app.post('/checkpoint', (req, res) => {
-	let admin = req.query.admin;
-	if (admin !== ADMIN_ORIGIN) {
-		res.send({
-			success: false,
-			error: `You are not allowed to execute admin operations.`
-		});
-	}
-	let status = setNextCheckPoint();
-	res.send({
-		status: status,
-		time: TIME.now,
-		message: `The simulation ${status ? `is not over` : `is over`}, the time is ${moment(TIME.now).format('M/D/YYYY')}.`
+		
 	});
-});
-
-app.post('/pricing', (req, res) => {
-	try {
-		let q = req.query;
-		let t_key = `ts${TIME.now}`;
-		let pricing = {
-			base: formatInputPrice(q.base),
-			pickup: formatInputPrice(q.pickup),
-			per_mile: formatInputPrice(q.per_mile),
-			per_minute: formatInputPrice(q.per_minute),
-			in_effect: TIME.now
-		}
-		let teamid = q.team;
-		if (!teamid) {
-			res.send({
-				success: false,
-				error: `No team specified.`
-			});
-		}
-		setTeamPricing(teamid, t_key, pricing).then((done) => {
-			res.send({
-				success: true,
-				team: q.team,
-				pricing: pricing
-			});	
-		}).catch((error) => {
-			res.send({
-				success: false,
-				error: reportToUser(error)
-			});
-		});
-	} catch (error) {
-		res.send({
-			success: false,
-			error: reportToUser(error)
-		});
-	}
-});
-
-app.post('/zones', (req, res) => {
-	try {
-		let q = req.query;
-		let t_key = `ts${TIME.now}`;
-		let zones = {
-			in_effect: TIME.now
-		}
-		let zone_list = q.zones.split(`,`);
-		zone_list.forEach((z) => {
-			if (z) {
-				z = z.trim();
-				if  (z !== `in_effect`) {
-					zones[z] = true;
-				}	
+	
+	app.get('/count/', (req, res) => {
+		
+		if (req.query.where) {
+			let cq = cleanWhereClause(req.query.where);
+			if (cq.success) {
+				req.query.where = cq.query;
+			} else {
+				res.send(cq);
 			}
-		});
-		let teamid = q.team;
-		if (!teamid) {
-			res.send({
-				success: false,
-				error: `No team specified.`
-			});
 		}
-		setTeamZones(teamid, t_key, zones).then((done) => {
+		
+		let params = req.query;
+		params.field = req.params.field;
+		countTrips(params).then((response) => {
 			res.send({
 				success: true,
-				team: q.team,
-				zones: zones
-			});	
+				count: response.count
+			});
 		}).catch((error) => {
 			res.send({
 				success: false,
 				error: reportToUser(error)
 			});
 		});
-	} catch (error) {
-		res.send({
-			success: false,
-			error: reportToUser(error)
-		});
-	}
-});
-
-app.get('/time', (req, res) => {
-	res.send({
-		sucess: true,
-		time: TIME.now,
-		message: `The simulation is not over, the time is ${moment(TIME.now).format('M/D/YYYY')}.`
+		
 	});
-});
+	
+	app.get('/simulate/', (req, res) => {
+		
+		try {
+			
+			let admin = req.query.admin;
+			if (admin !== ADMIN_ORIGIN) {
+				res.send({
+					success: false,
+					error: `You are not allowed to execute admin operations.`
+				});
+			}
+			
+			console.log(`\nGET /simulate`);
+			
+			let params = req.query;
+			params.field = 'trip_start_timestamp';
+			
+			countTrips(params).then((countRes) => {
+					
+				let teamMap = {};
+				params.teams.split(',').forEach((teamid) => {
+					teamMap[teamid] = true;
+				});
+				params.teams = teamMap;
+				params.limit = countRes.count;
+				
+				console.log(`Simulate over ${params.limit} records.`);
+				console.log(params.teams);
+				
+				getTrips(params).then((response) => {
+					let simulated = simulateTrips(response, teamMap).then((simMap) => {
+						let simData = scoreTrips(simMap);
+						res.send({
+							success: true,
+							start: new Date(params.start).getTime(),
+							end: new Date(params.end).getTime(),
+							data: simData
+						});
+					}).catch((error) => {
+						res.send({
+							success: false,
+							error: reportToUser(error)
+						});
+					});
+					
+				}).catch((error) => {
+					res.send({
+						success: false,
+						error: reportToUser(error)
+					});
+				});
+				
+			}).catch((error) => {
+				res.send({
+					success: false,
+					error: reportToUser(error)
+				});
+			});
+		
+		} catch (error) {
+			res.send({
+				success: false,
+				error: reportToUser(error)
+			});
+		}
+		
+	});
+	
+	app.post('/checkpoint', (req, res) => {
+		let admin = req.query.admin;
+		if (admin !== ADMIN_ORIGIN) {
+			res.send({
+				success: false,
+				error: `You are not allowed to execute admin operations.`
+			});
+		}
+		let status = setNextCheckPoint();
+		res.send({
+			status: status,
+			time: TIME.now,
+			message: `The simulation ${status ? `is not over` : `is over`}, the time is ${moment(TIME.now).format('M/D/YYYY')}.`
+		});
+	});
+	
+	app.post('/pricing', (req, res) => {
+		try {
+			let q = req.query;
+			let t_key = `ts${TIME.now}`;
+			let pricing = {
+				base: formatInputPrice(q.base),
+				pickup: formatInputPrice(q.pickup),
+				per_mile: formatInputPrice(q.per_mile),
+				per_minute: formatInputPrice(q.per_minute),
+				in_effect: TIME.now
+			}
+			let teamid = q.team;
+			if (!teamid) {
+				res.send({
+					success: false,
+					error: `No team specified.`
+				});
+			}
+			setTeamPricing(teamid, t_key, pricing).then((done) => {
+				res.send({
+					success: true,
+					team: q.team,
+					pricing: pricing
+				});	
+			}).catch((error) => {
+				res.send({
+					success: false,
+					error: reportToUser(error)
+				});
+			});
+		} catch (error) {
+			res.send({
+				success: false,
+				error: reportToUser(error)
+			});
+		}
+	});
+	
+	app.post('/zones', (req, res) => {
+		try {
+			let q = req.query;
+			let t_key = `ts${TIME.now}`;
+			let zones = {
+				in_effect: TIME.now
+			}
+			let zone_list = q.zones.split(`,`);
+			zone_list.forEach((z) => {
+				if (z) {
+					z = z.trim();
+					if  (z !== `in_effect`) {
+						zones[z] = true;
+					}	
+				}
+			});
+			let teamid = q.team;
+			if (!teamid) {
+				res.send({
+					success: false,
+					error: `No team specified.`
+				});
+			}
+			setTeamZones(teamid, t_key, zones).then((done) => {
+				res.send({
+					success: true,
+					team: q.team,
+					zones: zones
+				});	
+			}).catch((error) => {
+				res.send({
+					success: false,
+					error: reportToUser(error)
+				});
+			});
+		} catch (error) {
+			res.send({
+				success: false,
+				error: reportToUser(error)
+			});
+		}
+	});
+	
+	app.get('/time', (req, res) => {
+		res.send({
+			sucess: true,
+			time: TIME.now,
+			message: `The simulation is not over, the time is ${moment(TIME.now).format('M/D/YYYY')}.`
+		});
+	});
+	
+	app.get('/hello', (req, res) => {
+		res.send('Hello World!');
+	});
+	
+	app.get('/loaderio-7ec763e7f3af65111a4c49270f63052a', (req, res) => {
+		res.send('loaderio-7ec763e7f3af65111a4c49270f63052a');
+	});
+	
+	app.listen(PORT, () => {
+		console.log(`Listening on port ${PORT}...`);
+		console.log(`Navigate to https://lyft-vingkan.c9users.io/hello`);
+	});
 
-app.get('/hello', (req, res) => {
-	res.send('Hello World!');
-});
-
-app.get('/loaderio-7ec763e7f3af65111a4c49270f63052a', (req, res) => {
-	res.send('loaderio-7ec763e7f3af65111a4c49270f63052a');
-});
-
-app.listen(PORT, () => {
-	console.log(`Listening on port ${PORT}...`);
-	console.log(`Navigate to https://lyft-vingkan.c9users.io/hello`);
-});
+}
 
