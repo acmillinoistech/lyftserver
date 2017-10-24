@@ -15,9 +15,9 @@ let db = database.getDB();
 const URL = "https://lyft-vingkan.c9users.io";
 const ADMIN = process.env.ADMIN_SECRET || "secret";
 const GAME = process.env.GAME_KEY || false;
-const TEAMS = [
-    // Add teams here
-];
+const TEAMS = ``.split('\n');
+
+console.log(TEAMS);
 
 if (!GAME) {
     throw new Error('No GAME_KEY set.');
