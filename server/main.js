@@ -52,7 +52,7 @@ function setNextCheckPoint() {
 }
 
 
-database.init().then((done) => {
+database.init(GAME).then((gameConfig) => {
 	
 	console.log(`Established connection to database.`);
 
