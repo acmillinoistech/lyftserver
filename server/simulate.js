@@ -15,7 +15,7 @@ let db = database.getDB();
 const URL = "https://lyft-vingkan.c9users.io";
 const ADMIN = process.env.ADMIN_SECRET || "secret";
 const GAME = process.env.GAME_KEY || false;
-const TEAMS = ``.split(',');
+const TEAMS = `-KxMXCZ867T17nvgDb9d,-KxMY85EqOm8T-TzR2AV,-KxMYC0uoSDFTTE60PLT,-KxMYGCy9fK_5j-ofYBE`.split(',');
 
 console.log(TEAMS);
 

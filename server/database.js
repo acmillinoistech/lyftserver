@@ -10,7 +10,7 @@ let database = {
     init: (gameid) => {
         return new Promise((resolve, reject) => {
             firebase.auth().signInAnonymously().then((done) => {
-                db.ref()
+                resolve({success: true});
             }).catch((error) => {
                 reject(`Error [${error.code}] when signing into database: ${error.message}`);
             }); 
@@ -20,6 +20,8 @@ let database = {
 	getDB: () => {
 		return db;
 	},
+	
+	//getTeamList: (gameid)
     
     getTeamData: (gameid, teamid) => {
     	return new Promise((resolve, reject) => {
