@@ -21,7 +21,15 @@ let database = {
 		return db;
 	},
 	
-	//getTeamList: (gameid)
+	getTeamList: (gameid) => {
+        return new Promise((resolve, reject) => {
+            db.ref(`lyft/info/${gameid}`).once('value', (snap) => {
+                let map = snap.val() || {};
+                let list = Object.keys(map);
+                resolve(list);
+            }).catch(reject);
+        });
+	},
     
     getTeamData: (gameid, teamid) => {
     	return new Promise((resolve, reject) => {

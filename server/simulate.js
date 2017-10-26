@@ -13,20 +13,16 @@ let database = require('./database');
 let db = database.getDB();
 
 const URL = "https://lyft-vingkan.c9users.io";
-const ADMIN = process.env.ADMIN_SECRET || "secret";
+const ADMIN = process.env.ADMIN_SECRET || false;
 const GAME = process.env.GAME_KEY || false;
-const TEAMS = `-KxMXCZ867T17nvgDb9d,-KxMY85EqOm8T-TzR2AV,-KxMYC0uoSDFTTE60PLT,-KxMYGCy9fK_5j-ofYBE`.split(',');
-
-console.log(TEAMS);
+let TEAMS = [];
 
 if (!GAME) {
     throw new Error('No GAME_KEY set.');
 }
 
-if (TEAMS.length === 0) {
-    throw new Error('No teams to simulate.');
-} else if (TEAMS[0].length === 0) {
-    throw new Error('No teams to simulate.');
+if (!ADMIN) {
+    throw new Error('No ADMIN_SECRET set.');
 }
 
 function get(url, query) {
@@ -98,7 +94,19 @@ if (!startArg || !endArg) {
 }
 
 database.init().then(() => {
-    main(startArg, endArg);
+    console.log(`Fetching list of teams for ${GAME}`);
+    database.getTeamList(GAME).then((list) => {
+        TEAMS = list;
+        console.log(TEAMS);
+        if (TEAMS.length === 0) {
+            throw new Error('No teams to simulate.');
+        } else if (TEAMS[0].length === 0) {
+            throw new Error('No teams to simulate.');
+        }
+        main(startArg, endArg);
+    }).catch((error) => {
+        throw new Error(`Error: ${error}`);
+    });
 });
 
 function main(startArg, endArg) {
