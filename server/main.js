@@ -5,6 +5,7 @@ let app = express();
 let request = require('request');
 let moment = require('moment');
 let database = require('./database');
+let gameConfig = require('./game');
 
 /* Global Variables */
 
@@ -14,27 +15,11 @@ const PUBLIC_TRIP_LIMIT = 1000;
 const PORT = process.argv[2] || 8080;
 const TAXI_DATASET_URL = 'https://data.cityofchicago.org/resource/wrvz-psew.json';
 const PROPS_LIST = 'dropoff_centroid_latitude, dropoff_centroid_longitude, dropoff_community_area, extras, fare, pickup_centroid_latitude, pickup_centroid_longitude, pickup_community_area, taxi_id, tips, tolls, trip_end_timestamp, trip_id, trip_miles, trip_seconds, trip_start_timestamp, trip_total';
-const TIME = {
-	simulation: [
-		new Date('10/1/2017').getTime(),
-		new Date('10/7/2017').getTime()
-	],
-	real: [
-		new Date('10/1/2016').getTime(),
-		new Date('10/7/2016').getTime()
-	],
-	checkpoints: [
-		new Date('10/1/2017').getTime(),
-		new Date('10/8/2017').getTime(),
-		new Date('10/15/2017').getTime(),
-		new Date('10/22/2017').getTime()
-	],
-	now: 0
-};
+const TIME = gameConfig.time;
 
-const COST_WAIT = 3.00;
-const COST_WAIT_SPAN = 2.50;
-const COST_POWER_ZONE = 2.75;
+const COST_WAIT = gameConfig.waitCostMean;
+const COST_WAIT_SPAN = gameConfig.waitCostSpan;
+const COST_POWER_ZONE = gameConfig.powerZoneCost;
 
 let cpidx = 1;
 function setNextCheckPoint() {
@@ -52,8 +37,7 @@ function setNextCheckPoint() {
 	}
 }
 
-
-database.init(GAME).then((gameConfig) => {
+database.init(GAME).then((dbGameConfig) => {
 	
 	console.log(`Established connection to database.`);
 
