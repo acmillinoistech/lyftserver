@@ -25,6 +25,8 @@ if (!GAME) {
 
 if (TEAMS.length === 0) {
     throw new Error('No teams to simulate.');
+} else if (TEAMS[0].length === 0) {
+    throw new Error('No teams to simulate.');
 }
 
 function get(url, query) {
