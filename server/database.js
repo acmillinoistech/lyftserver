@@ -7,16 +7,28 @@ let db = FirebaseApp.database();
 
 let database = {
     
-    init: () => {
-        let p = firebase.auth().signInAnonymously();
-        p.catch((error) => {
-            console.log(`Error [${error.code}] when signing into database: ${error.message}`);
+    init: (gameid) => {
+        return new Promise((resolve, reject) => {
+            firebase.auth().signInAnonymously().then((done) => {
+                resolve({success: true});
+            }).catch((error) => {
+                reject(`Error [${error.code}] when signing into database: ${error.message}`);
+            }); 
         });
-        return p;
     },
 	
 	getDB: () => {
 		return db;
+	},
+	
+	getTeamList: (gameid) => {
+        return new Promise((resolve, reject) => {
+            db.ref(`lyft/info/${gameid}`).once('value', (snap) => {
+                let map = snap.val() || {};
+                let list = Object.keys(map);
+                resolve(list);
+            }).catch(reject);
+        });
 	},
     
     getTeamData: (gameid, teamid) => {

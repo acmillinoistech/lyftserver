@@ -34,6 +34,7 @@ const TIME = {
 
 const COST_WAIT = 3.00;
 const COST_WAIT_SPAN = 2.50;
+const COST_POWER_ZONE = 2.75;
 
 let cpidx = 1;
 function setNextCheckPoint() {
@@ -52,7 +53,7 @@ function setNextCheckPoint() {
 }
 
 
-database.init().then((done) => {
+database.init(GAME).then((gameConfig) => {
 	
 	console.log(`Established connection to database.`);
 
@@ -105,7 +106,7 @@ function isInRange(timestamp, range) {
 
 function reportToUser(error) {
 	console.log(error);
-	return error; //JSON.stringify(error);
+	return 'Server Error: ' + error; //JSON.stringify(error);
 }
 
 function leftPad(n, d) {
@@ -494,12 +495,15 @@ function simulateTrips(list, teams) {
 				//console.log(teamData)
 				displaySplitBreakdown(simulated);
 			}
-			resolve(res);
+			resolve({
+				simMap: res,
+				teamMap: teamMap
+			});
 		}).catch(reject);
 	});
 }
 
-function scoreTrips(simMap) {
+function scoreTrips(simMap, teamMap) {
 	
 	let simulationData = {};
 	
@@ -513,11 +517,14 @@ function scoreTrips(simMap) {
 			revenue: {
 				lyft: 0,
 				taxi: 0
-			}
+			},
+			zones: {}
 		};
 		
 		let list = simMap[teamid];
+		let teamData = teamMap[teamid] || {};
 		list.forEach((record, idx) => {
+			// Revenue and Trips
 			let rev = parseFloat(record.trip_total);
 			if (record.company === 'Bauer Taxi Service') {
 				simulationData[teamid].trips.taxi++;
@@ -525,6 +532,24 @@ function scoreTrips(simMap) {
 			} else {
 				simulationData[teamid].trips.lyft++;
 				simulationData[teamid].revenue.lyft += rev;
+			}
+			// Power Zone Deductions
+			let cs = new Date(record.trip_start_timestamp).getTime();
+			let model = {};
+			//model.pricing = getTeamPricing(teamData.pricing, cs);
+			model.zones = getTeamZones(teamData.zones, cs);
+			let thisZone = record.pickup_community_area;
+			if (thisZone in model.zones) {
+				//let result = (record.company === "Bauer Taxi Service") ? "LOST" : "WON";
+				//console.log(`${teamid} ${result} a trip in zone ${thisZone}`);
+				if (!(thisZone in simulationData[teamid].zones)) {
+					simulationData[teamid].zones[thisZone] = {
+						count: 0,
+						cost: 0
+					};
+				}
+				simulationData[teamid].zones[thisZone].count++;
+				simulationData[teamid].zones[thisZone].cost += COST_POWER_ZONE;
 			}
 		});	
 		
@@ -535,6 +560,10 @@ function scoreTrips(simMap) {
 		simulationData[teamid].revenue.lyft = lr.toFixed(2);
 		let tr = simulationData[teamid].revenue.taxi;
 		simulationData[teamid].revenue.taxi = tr.toFixed(2);
+		for (let zid in simulationData[teamid].zones) {
+			let zc = simulationData[teamid].zones[zid].cost;
+			simulationData[teamid].zones[zid].cost = zc.toFixed(2);
+		}
 	}
 	
 	return simulationData;
@@ -602,8 +631,8 @@ function initAPI() {
 				
 				let teamMap = {};
 					teamMap[teamid] = true;
-				let simulated = simulateTrips(response, teamMap).then((simMap) => {
-					let simulated = simMap[teamid];
+				let simulated = simulateTrips(response, teamMap).then((simRes) => {
+					let simulated = simRes.simMap[teamid];
 					res.send({
 						success: true,
 						length: response.length,
@@ -689,8 +718,8 @@ function initAPI() {
 				console.log(params.teams);
 				
 				getTrips(params).then((response) => {
-					let simulated = simulateTrips(response, teamMap).then((simMap) => {
-						let simData = scoreTrips(simMap);
+					let simulated = simulateTrips(response, teamMap).then((simRes) => {
+						let simData = scoreTrips(simRes.simMap, simRes.teamMap);
 						res.send({
 							success: true,
 							start: new Date(params.start).getTime(),
