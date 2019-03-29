@@ -747,13 +747,14 @@ function initAPI() {
 				success: false,
 				error: `You are not allowed to execute admin operations.`
 			});
+		} else {
+			let status = setNextCheckPoint();
+			res.send({
+				status: status,
+				time: TIME.now,
+				message: `The simulation ${status ? `is not over` : `is over`}, the time is ${moment(TIME.now).format('M/D/YYYY')}.`
+			});
 		}
-		let status = setNextCheckPoint();
-		res.send({
-			status: status,
-			time: TIME.now,
-			message: `The simulation ${status ? `is not over` : `is over`}, the time is ${moment(TIME.now).format('M/D/YYYY')}.`
-		});
 	});
 	
 	app.post('/pricing', (req, res) => {

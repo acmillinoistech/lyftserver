@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "description": "Server for the ACM <> Lyft data science challenge.",
   "main": "server.js",
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/acmillinoistech/lyftserver"
+  },
   "author": "Vinesh Kannan <v@hawk.iit.edu>",
   "dependencies": {
     "async": "~0.2.8",
@@ -14,9 +17,5 @@
     "firebase": "^4.6.0",
     "moment": "^2.19.0",
     "request": "^2.83.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/acmillinoistech/lyftserver"
   }
 }
