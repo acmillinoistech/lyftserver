@@ -10,12 +10,16 @@
   "author": "Vinesh Kannan <v@hawk.iit.edu>",
   "dependencies": {
     "async": "~0.2.8",
-    "express": "~3.2.4",
-    "socket.io": "~0.9.14"
-  },
-  "devDependencies": {
+    "express": ">=3.11.0",
+    "socket.io": "~0.9.14",
     "firebase": "^4.6.0",
     "moment": "^2.19.0",
-    "request": "^2.83.0"
+    "request": "^2.83.0",
+    "ws": ">=1.1.1",
+    "fresh": ">=0.5.2",
+    "mime": ">=1.4.1",
+    "qs": ">=1.0.0",
+    "uglify-js": ">=2.6.0",
+    "send": ">=0.11.1"
   }
 }
