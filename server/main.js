@@ -43,6 +43,16 @@ database.init(GAME).then((dbGameConfig) => {
 
 	TIME.now = TIME.checkpoints[0];
 	
+	database.getDB().ref(`lyft/time/${GAME}`).once('value', (snap) => {
+		const timeVal = snap.val();
+		if (!timeVal) {
+			updateTime({
+				time: TIME.now,
+				idx: cpidx
+			});
+		}
+	});
+	
 	database.onUpdateTime(GAME, (timeData) => {
 		cpidx = timeData.idx;
 		TIME.now = timeData.time;
