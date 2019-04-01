@@ -750,7 +750,7 @@ function initAPI() {
 		} else {
 			let status = setNextCheckPoint();
 			res.send({
-				status: status,
+				success: status,
 				time: TIME.now,
 				message: `The simulation ${status ? `is not over` : `is over`}, the time is ${moment(TIME.now).format('M/D/YYYY')}.`
 			});
