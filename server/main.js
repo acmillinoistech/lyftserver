@@ -856,7 +856,7 @@ function initAPI() {
 	
 	app.listen(PORT, () => {
 		console.log(`Listening on port ${PORT}...`);
-		console.log(`Navigate to https://lyft-vingkan.c9users.io/hello`);
+		console.log(`Navigate to URL/hello`);
 	});
 
 }
