@@ -884,7 +884,7 @@ function initAPI() {
 		console.log(`Server Time Zone: ${moment().format('Z')}`);
 		console.log(`Game ID: ${GAME}`);
 		console.log();
-		console.log(`Navigate to ${SERVER_URL}/hello`);
+		console.log(`Server URL: ${SERVER_URL}`);
 		console.log();
 	});
 
