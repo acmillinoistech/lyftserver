@@ -868,11 +868,11 @@ function initAPI() {
 	});
 	
 	app.get('/hello', (req, res) => {
-		res.send(`Hello! Your Game ID is: ${GAME}`);
+		res.send(`Hello!<br>Your Game ID is: ${GAME}<br>Simulation Time: ${moment(TIME.now).format('M/D/YYYY hh:mm A')}`);
 	});
 	
 	app.get('/', (req, res) => {
-		res.send(`Hello! Your Game ID is: ${GAME}`);
+		res.send(`Hello!<br>Your Game ID is: ${GAME}<br>Simulation Time: ${moment(TIME.now).format('M/D/YYYY hh:mm A')}`);
 	});
 	
 	app.get('/loaderio-7ec763e7f3af65111a4c49270f63052a', (req, res) => {
