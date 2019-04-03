@@ -1,7 +1,15 @@
 'use strict';
 
+require('dotenv').config();
 let firebase = require('firebase');
-let config = require('./config');
+let config = {
+    apiKey: process.env.apiKey,
+    authDomain: process.env.authDomain,
+    databaseURL: process.env.databaseURL,
+    projectId: process.env.projectId,
+    storageBucket: process.env.storageBucket,
+    messagingSenderId: process.env.messagingSenderId
+};
 let FirebaseApp = firebase.initializeApp(config);
 let db = FirebaseApp.database();
 

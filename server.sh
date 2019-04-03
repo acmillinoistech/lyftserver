@@ -3,13 +3,13 @@
 if [ -z "$1" ]
     then
     echo "Error: No GAME_KEY given."
-    exit 0
+    exit 1
 fi
 
 if [ -z "$2" ]
     then
     echo "Error: No ADMIN_SECRET given."
-    exit 0
+    exit 1
 fi
 
 export GAME_KEY=$1
@@ -21,4 +21,4 @@ echo "Set ADMIN_SECRET to $2"
 echo $ADMIN_SECRET
 
 echo "Starting server node..."
-node server/main.js
+node index.js

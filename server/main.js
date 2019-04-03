@@ -6,11 +6,13 @@ let request = require('request');
 let moment = require('moment');
 let database = require('./database');
 let gameConfig = require('./game');
+require('dotenv').config();
 
 /* Global Variables */
 
-const GAME = process.env.GAME_KEY || "no_game";
-const ADMIN_ORIGIN = process.env.ADMIN_SECRET || 'secret';
+const SERVER_URL = process.env.SERVER_URL || "no_url";
+const GAME = process.env.GAME_KEY;
+const ADMIN_ORIGIN = process.env.ADMIN_SECRET;
 const PUBLIC_TRIP_LIMIT = 1000;
 const PORT = process.argv[2] || 8080;
 const TAXI_DATASET_URL = 'https://data.cityofchicago.org/resource/wrvz-psew.json';
@@ -20,6 +22,15 @@ const TIME = gameConfig.time;
 const COST_WAIT = gameConfig.waitCostMean;
 const COST_WAIT_SPAN = gameConfig.waitCostSpan;
 const COST_POWER_ZONE = gameConfig.powerZoneCost;
+
+if (!GAME) {
+	console.log('Error: No GAME_KEY given.');
+	process.exit(1);
+}
+if (!ADMIN_ORIGIN) {
+	console.log('Error: No ADMIN_SECRET given.');
+	process.exit(1);
+}
 
 let cpidx = 1;
 function setNextCheckPoint() {
@@ -866,8 +877,11 @@ function initAPI() {
 	
 	app.listen(PORT, () => {
 		console.log(`Listening on port ${PORT}...`);
-		console.log(`Navigate to URL/hello`);
+		console.log(`Server Time Zone: ${moment().format('Z')}`);
+		console.log(`Game ID: ${GAME}`);
+		console.log();
+		console.log(`Navigate to ${SERVER_URL}/hello`);
+		console.log();
 	});
 
 }
-
