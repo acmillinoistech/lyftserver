@@ -868,7 +868,11 @@ function initAPI() {
 	});
 	
 	app.get('/hello', (req, res) => {
-		res.send('Hello World!');
+		res.send(`Hello! Your Game ID is: ${GAME}`);
+	});
+	
+	app.get('/', (req, res) => {
+		res.send(`Hello! Your Game ID is: ${GAME}`);
 	});
 	
 	app.get('/loaderio-7ec763e7f3af65111a4c49270f63052a', (req, res) => {
